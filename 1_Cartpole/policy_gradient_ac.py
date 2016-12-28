@@ -1,3 +1,5 @@
+# https://github.com/kvfrans/openai-cartpole/blob/master/cartpole-policygradient.py
+
 import tensorflow as tf
 import numpy as np
 import random
@@ -38,7 +40,7 @@ def value_gradient():
         calculated = tf.matmul(h1,w2) + b2
         diffs = calculated - newvals
         loss = tf.nn.l2_loss(diffs)
-        optimizer = tf.train.AdamOptimizer(0.1).minimize(loss)
+        optimizer = tf.train.AdamOptimizer(0.01).minimize(loss)
         return calculated, state, newvals, optimizer, loss
 
 def run_episode(env, policy_grad, value_grad, sess):
@@ -102,20 +104,27 @@ def run_episode(env, policy_grad, value_grad, sess):
 
 
 env = gym.make('CartPole-v0')
-env.monitor.start('cartpole-hill/', force=True)
+# env.monitor.start('cartpole-hill/', force=True)
 policy_grad = policy_gradient()
 value_grad = value_gradient()
 sess = tf.InteractiveSession()
 sess.run(tf.initialize_all_variables())
+reward_sum = 0
+running_reward = None
 for i in xrange(2000):
     reward = run_episode(env, policy_grad, value_grad, sess)
+    reward_sum = reward
+    running_reward = reward_sum if running_reward is None else running_reward * 0.99 + reward_sum * 0.01
+    print '%d: resetting env. episode reward total was %f. running mean: %f' % (
+        i, reward_sum, running_reward)
+    reward_sum = 0
     if reward == 200:
         print "reward 200"
-        print i
-        break
-t = 0
-for _ in xrange(1000):
-    reward = run_episode(env, policy_grad, value_grad, sess)
-    t += reward
-print t / 1000
-env.monitor.close()
+        # print i
+        # break
+# t = 0
+# for _ in xrange(1000):
+#     reward = run_episode(env, policy_grad, value_grad, sess)
+#     t += reward
+# print t / 1000
+# env.monitor.close()

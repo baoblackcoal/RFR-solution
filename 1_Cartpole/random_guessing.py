@@ -1,17 +1,21 @@
+# https://github.com/kvfrans/openai-cartpole/blob/master/cartpole-random.py
+
 import gym
 import numpy as np
 import matplotlib.pyplot as plt
+
 
 def run_episode(env, parameters):
     observation = env.reset()
     totalreward = 0
     for _ in xrange(200):
-        action = 0 if np.matmul(parameters,observation) < 0 else 1
+        action = 0 if np.matmul(parameters, observation) < 0 else 1
         observation, reward, done, info = env.step(action)
         totalreward += reward
         if done:
             break
     return totalreward
+
 
 def train(submit):
     env = gym.make('CartPole-v0')
@@ -24,7 +28,7 @@ def train(submit):
     for _ in xrange(10000):
         counter += 1
         parameters = np.random.rand(4) * 2 - 1
-        reward = run_episode(env,parameters)
+        reward = run_episode(env, parameters)
         if reward > bestreward:
             bestreward = reward
             bestparams = parameters
@@ -33,10 +37,11 @@ def train(submit):
 
     if submit:
         for _ in xrange(100):
-            run_episode(env,bestparams)
+            run_episode(env, bestparams)
         env.monitor.close()
 
     return counter
+
 
 # train an agent to submit to openai gym
 # train(submit=True)
@@ -45,8 +50,7 @@ def train(submit):
 results = []
 for _ in xrange(1000):
     results.append(train(submit=False))
-
-plt.hist(results,50,normed=1, facecolor='g', alpha=0.75)
+plt.hist(results, 50, normed=1, facecolor='g', alpha=0.75)
 plt.xlabel('Episodes required to reach 200')
 plt.ylabel('Frequency')
 plt.title('Histogram of Random Search')

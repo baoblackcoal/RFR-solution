@@ -25,7 +25,7 @@ def train(submit):
     counter = 0
     bestparams = None
     bestreward = 0
-    for _ in xrange(10000):
+    for _ in xrange(200):
         counter += 1
         parameters = np.random.rand(4) * 2 - 1
         reward = run_episode(env, parameters)
@@ -50,7 +50,9 @@ def train(submit):
 results = []
 for _ in xrange(1000):
     results.append(train(submit=False))
-plt.hist(results, 50, normed=1, facecolor='g', alpha=0.75)
+weights = np.ones_like(results)/float(len(results))
+plt.hist(results, 10, weights=weights)
+# plt.hist(results, 50, normed=1, facecolor='g', alpha=0.75)
 plt.xlabel('Episodes required to reach 200')
 plt.ylabel('Frequency')
 plt.title('Histogram of Random Search')

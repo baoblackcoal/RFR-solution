@@ -26,7 +26,7 @@ def train(submit):
         env.monitor.start('cartpole-hill/', force=True)
 
     episodes_per_update = 5
-    noise_scaling = 0.5
+    noise_scaling = 0.2
     parameters = np.random.rand(4) * 2 - 1
     bestreward = 0
     counter = 0
@@ -59,11 +59,13 @@ def train(submit):
 # print r
 
 results = []
-for _ in xrange(100):
+for _ in xrange(1000):
     results.append(train(submit=False))
-plt.hist(results, 50, normed=1, facecolor='g', alpha=0.75)
+weights = np.ones_like(results)/float(len(results))
+plt.hist(results, 10, weights=weights)
+# plt.hist(results, 50, normed=1, facecolor='g', alpha=0.75)
 plt.xlabel('Episodes required to reach 200')
 plt.ylabel('Frequency')
-plt.title('Histogram of Random Search')
+plt.title('Histogram of Hill Climbing Search')
 plt.show()
 

@@ -111,17 +111,17 @@ sess = tf.InteractiveSession()
 sess.run(tf.initialize_all_variables())
 reward_sum = 0
 running_reward = None
-for i in xrange(2000):
+for i in xrange(1000):
     reward = run_episode(env, policy_grad, value_grad, sess)
     reward_sum = reward
     running_reward = reward_sum if running_reward is None else running_reward * 0.99 + reward_sum * 0.01
     print '%d: resetting env. episode reward total was %f. running mean: %f' % (
         i, reward_sum, running_reward)
     reward_sum = 0
-    if reward == 200:
-        print "reward 200"
-        # print i
-        # break
+    # if reward == 200:
+    #     print "reward 200"
+    #     print i
+    #     break
 # t = 0
 # for _ in xrange(1000):
 #     reward = run_episode(env, policy_grad, value_grad, sess)

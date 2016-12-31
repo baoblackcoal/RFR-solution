@@ -7,7 +7,6 @@ import tensorflow as tf
 # hyperparameters
 H = 20  # number of hidden layer neurons
 D = 4  # input dimensionality
-batch_size = 10  # every how many episodes to do a param update?
 learning_rate = 1e-2
 gamma = 0.99  # discount factor for reward
 decay_rate = 0.99  # decay factor for RMSProp leaky sum of grad^2
@@ -35,28 +34,33 @@ episode_number = 0
 
 sess = tf.InteractiveSession()
 
-with tf.variable_scope("policy"):
+with tf.name_scope("policy_net"):
     state = tf.placeholder(tf.float64, [None, 4])
     advantage = tf.placeholder(tf.float64, [None, 1])
+    reward_input = tf.placeholder(tf.float32)
+    episode_reward = tf.get_variable("episode_reward", initializer=tf.constant(0.), dtype=tf.float32)
+    episode_reward = reward_input
     w1 = tf.get_variable("w1", initializer=tf.constant(np.random.randn(D, H) / np.sqrt(D)), dtype=tf.float64)
-    tf.histogram_summary("w1", w1)
     h1 = tf.nn.relu(tf.matmul(state, w1))
     w2 = tf.get_variable("w2", initializer=tf.constant(np.random.randn(H, 1) / np.sqrt(H)), dtype=tf.float64)
-    tf.histogram_summary("w2", w2)
     probability = tf.nn.sigmoid(tf.matmul(h1, w2))
     loss = -tf.reduce_sum(advantage * tf.log(probability))
-    tf.scalar_summary("loss", loss)
     optimizer = tf.train.AdamOptimizer(learning_rate).minimize(loss)
     # optimizer = tf.train.RMSPropOptimizer(learning_rate, decay_rate).minimize(loss)
 
-summaries_dir = "/tmp/tf_logs"
+    tf.scalar_summary("loss", loss)
+    tf.scalar_summary("episode_reward", episode_reward)
+    # tf.histogram_summary("w1", w1)
+    # tf.histogram_summary("w2", w2)
+
+summaries_dir = "/tmp/vanilla"
 if tf.gfile.Exists(summaries_dir):
     tf.gfile.DeleteRecursively(summaries_dir)
 tf.gfile.MakeDirs(summaries_dir)
 merged_summary_op = tf.merge_all_summaries()
 summary_writer = tf.train.SummaryWriter(summaries_dir, sess.graph)
 sess.run(tf.initialize_all_variables())
-for i in xrange(1000):
+while True:
     if render: env.render()
 
     x = observation
@@ -83,9 +87,6 @@ for i in xrange(1000):
     if done or reward_sum >= 200:  # an episode finished
         episode_number += 1
 
-        # summary_str = sess.run(merged_summary_op)
-        # summary_writer.add_summary(summary_str, episode_number)
-        # summary_writer.add_summary("episode_number", episode_number)
         # stack together all inputs, hidden states, action gradients, and rewards for this episode
         epx = np.vstack(xs)
         # eph = np.vstack(hs)
@@ -100,7 +101,8 @@ for i in xrange(1000):
 
         epdlogp *= discounted_epr  # modulate the gradient with advantage (PG magic happens right here.)
 
-        sum_str, _ = sess.run([merged_summary_op, optimizer], feed_dict={state: epx, advantage: epdlogp})
+        sum_str, _, _ = sess.run([merged_summary_op, optimizer, episode_reward],
+                                 feed_dict={state: epx, advantage: epdlogp, reward_input: reward_sum})
         summary_writer.add_summary(sum_str, episode_number)
 
         # boring book-keeping

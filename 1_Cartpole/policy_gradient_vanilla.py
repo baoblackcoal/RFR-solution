@@ -1,5 +1,6 @@
-# Inspire by https://gist.github.com/karpathy/a4166c7fe253700972fcbc77e4ea32c5
-#            https://github.com/kvfrans/openai-cartpole/blob/master/cartpole-policygradient.py
+# Inspired from https://gist.github.com/karpathy/a4166c7fe253700972fcbc77e4ea32c5
+#               https://github.com/kvfrans/openai-cartpole/blob/master/cartpole-policygradient.py
+
 import numpy as np
 import gym
 import tensorflow as tf
@@ -7,7 +8,7 @@ import tensorflow as tf
 # hyperparameters
 H = 20  # number of hidden layer neurons
 D = 4  # input dimensionality
-learning_rate = 1e-2
+learning_rate = 1e-3
 gamma = 0.99  # discount factor for reward
 decay_rate = 0.99  # decay factor for RMSProp leaky sum of grad^2
 render = False  # True#False
@@ -72,14 +73,13 @@ while True:
 
     # record various intermediates (needed later for backprop)
     xs.append(x)  # observation
-    y = 1 if action == 1 else 0  # a "fake label"
+    y = 1 if action == 1 else 0 # a "fake label"
 
     # grad that encourages the action that was taken to be taken (see http://cs231n.github.io/neural-networks-2/#losses if confused)
     dlogps.append(y - aprob)
 
     # step the environment and get new measurements
     observation, reward, done, info = env.step(action)
-    reward = -1. if done else reward
     reward_sum += reward
 
     drs.append(reward)  # record reward (has to be done after we call step() to get reward for previous action)
@@ -89,7 +89,6 @@ while True:
 
         # stack together all inputs, hidden states, action gradients, and rewards for this episode
         epx = np.vstack(xs)
-        # eph = np.vstack(hs)
         epdlogp = np.vstack(dlogps)
         epr = np.vstack(drs)
 

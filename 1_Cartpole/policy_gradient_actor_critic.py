@@ -7,6 +7,7 @@ import gym
 import math
 import matplotlib.pyplot as plt
 
+learning_rate = 1e-3
 
 def policy_gradient():
     with tf.variable_scope("policy"):
@@ -22,7 +23,7 @@ def policy_gradient():
         good_probabilities = tf.reduce_sum(tf.mul(probabilities, actions), reduction_indices=[1])
         eligibility = tf.log(good_probabilities) * advantages
         loss = -tf.reduce_sum(eligibility)
-        optimizer = tf.train.AdamOptimizer(0.01).minimize(loss)
+        optimizer = tf.train.AdamOptimizer(learning_rate).minimize(loss)
 
         tf.scalar_summary("loss", loss)
         tf.scalar_summary("episode_reward", episode_reward)
@@ -42,7 +43,7 @@ def value_gradient():
         diffs = calculated - newvals
         loss = tf.nn.l2_loss(diffs)
         # tf.scalar_summary(loss.name, loss)
-        optimizer = tf.train.AdamOptimizer(0.01).minimize(loss)
+        optimizer = tf.train.AdamOptimizer(learning_rate).minimize(loss)
         return calculated, state, newvals, optimizer, loss
 
 
@@ -123,21 +124,14 @@ env = gym.make('CartPole-v0')
 # env.monitor.start('cartpole-hill/', force=True)
 reward_sum = 0
 running_reward = None
-for episode_number in xrange(1000):
+episode_number = 0
+while True:
+    episode_number += 1
     reward = run_episode(env, policy_grad, value_grad, sess, episode_number)
     reward_sum = reward
     running_reward = reward_sum if running_reward is None else running_reward * 0.99 + reward_sum * 0.01
     print '%d: resetting env. episode reward total was %f. running mean: %f' % (
         episode_number, reward_sum, running_reward)
     reward_sum = 0
-    # if reward == 200:
-    #     print "reward 200"
-    #     print i
-    #     break
 
-# t = 0
-# for _ in xrange(1000):
-#     reward = run_episode(env, policy_grad, value_grad, sess)
-#     t += reward
-# print t / 1000
 # env.monitor.close()

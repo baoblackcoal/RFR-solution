@@ -1,22 +1,22 @@
 # gen_jokes
 inspired from https://github.com/leido/char-rnn-cn
 
-## requirement
+## Requirement
 tensorflow >= 0.12.1
 python3
 
 ## Train
-`python3 gen_lyrics.py 0`
+`python3 gen_jokes.py 0`
 
 ## Generate jokes
-`python3 gen_lyrics.py 1`
+`python3 gen_jokes.py 1`
 
 ## Embedding visual
 Run command `tensorboard --logdir=logs` in the current directory, then get embedding visualization：
 
 ![embedding](./embedding.png)
 
-Generated 30 result:
+Generated 30 jokes that begain with "In ":
 
 ```
 Joke 0: In the people place inclown bedword old suprentisture to do big Americans voties to running in a robor of too stent, his blacksage tweaks. The Willag Govnamed ever, but Tind has our callentinal Americans.

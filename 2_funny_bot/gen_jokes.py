@@ -9,7 +9,6 @@ from tensorflow.python.ops import rnn_cell, seq2seq
 
 
 class HParam():
-
     batch_size = 32
     n_epoch = 100
     learning_rate = 0.01
@@ -22,11 +21,11 @@ class HParam():
     seq_length = 20
     log_dir = './logs'
     metadata = 'metadata.tsv'
-    gen_num = 500 # how many chars to generate
+    max_word_num = 300
+    gen_joke_num = 30
 
 
 class DataGenerator():
-
     def __init__(self, datafiles, args):
         self.seq_length = args.seq_length
         self.batch_size = args.batch_size
@@ -124,28 +123,28 @@ class Model():
                                                     [targets],
                                                     [tf.ones_like(targets, dtype=tf.float32)])
             self.cost = tf.reduce_sum(loss) / args.batch_size
-            tf.scalar_summary('loss', self.cost)
+            tf.summary.scalar('loss', self.cost)
 
         with tf.name_scope('optimize'):
             self.lr = tf.placeholder(tf.float32, [])
-            tf.scalar_summary('learning_rate', self.lr)
+            tf.summary.scalar('learning_rate', self.lr)
 
             optimizer = tf.train.AdamOptimizer(self.lr)
             tvars = tf.trainable_variables()
             grads = tf.gradients(self.cost, tvars)
             for g in grads:
-                tf.histogram_summary(g.name, g)
+                tf.summary.histogram(g.name, g)
             grads, _ = tf.clip_by_global_norm(grads, args.grad_clip)
 
             self.train_op = optimizer.apply_gradients(zip(grads, tvars))
-            self.merged_op = tf.merge_all_summaries()
+            self.merged_op = tf.summary.merge_all()
 
 
 def train(data, model, args):
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
         saver = tf.train.Saver()
-        writer = tf.train.SummaryWriter(args.log_dir, sess.graph)
+        writer = tf.summary.FileWriter(args.log_dir, sess.graph)
 
         # Add embedding tensorboard visualization. Need tensorflow version
         # >= 0.12.0RC0
@@ -156,10 +155,10 @@ def train(data, model, args):
         projector.visualize_embeddings(writer, config)
 
         max_iter = args.n_epoch * \
-            (data.total_len // args.seq_length) // args.batch_size
+                   (data.total_len // args.seq_length) // args.batch_size
         for i in range(max_iter):
             learning_rate = args.learning_rate * \
-                (args.decay_rate ** (i // args.decay_steps))
+                            (args.decay_rate ** (i // args.decay_steps))
             x_batch, y_batch = data.next_batch()
             feed_dict = {model.input_data: x_batch,
                          model.target_data: y_batch, model.lr: learning_rate}
@@ -183,35 +182,42 @@ def sample(data, model, args):
         saver.restore(sess, ckpt)
 
         # initial phrase to warm RNN
-        prime = u'你要离开我知道很简单'
-        state = sess.run(model.cell.zero_state(1, tf.float32))
+        for j in range(args.gen_joke_num ):
+            prime = 'In '
+            state = sess.run(model.cell.zero_state(1, tf.float32))
 
-        for word in prime[:-1]:
-            x = np.zeros((1, 1))
-            x[0, 0] = data.char2id(word)
-            feed = {model.input_data: x, model.initial_state: state}
-            state = sess.run(model.last_state, feed)
+            for word in prime[:-1]:
+                x = np.zeros((1, 1))
+                x[0, 0] = data.char2id(word)
+                feed = {model.input_data: x, model.initial_state: state}
+                state = sess.run(model.last_state, feed)
 
-        word = prime[-1]
-        lyrics = prime
-        for i in range(args.gen_num):
-            x = np.zeros([1, 1])
-            x[0, 0] = data.char2id(word)
-            feed_dict = {model.input_data: x, model.initial_state: state}
-            probs, state = sess.run([model.probs, model.last_state], feed_dict)
-            p = probs[0]
-            word = data.id2char(np.argmax(p))
-            print(word, end='')
-            sys.stdout.flush()
-            time.sleep(0.05)
-            lyrics += word
-        return lyrics
+            def weighted_pick(weights):
+                t = np.cumsum(weights)
+                s = np.sum(weights)
+                return (int(np.searchsorted(t, np.random.rand(1) * s)))
+
+            word = prime[-1]
+            lyrics = prime
+            for i in range(args.max_word_num):
+                x = np.zeros([1, 1])
+                x[0, 0] = data.char2id(word)
+                feed_dict = {model.input_data: x, model.initial_state: state}
+                probs, state = sess.run([model.probs, model.last_state], feed_dict)
+                p = probs[0]
+                sample_id = weighted_pick(p)
+                word = data.id2char(sample_id)
+                sys.stdout.flush()
+                if word != '\n':
+                    lyrics += word
+                else:
+                    print('Joke {}: {}'.format(j, lyrics))
+                    break
 
 
 def main(infer):
-
     args = HParam()
-    data = DataGenerator('JayLyrics.txt', args)
+    data = DataGenerator('joke_corpus.txt', args)
     model = Model(args, data, infer=infer)
 
     run_fn = sample if infer else train
@@ -223,9 +229,9 @@ if __name__ == '__main__':
     msg = """
     Usage:
     Training: 
-        python3 gen_lyrics.py 0
+        python3 gen_jokes.py 0
     Sampling:
-        python3 gen_lyrics.py 1
+        python3 gen_jokes.py 1
     """
     if len(sys.argv) == 2:
         infer = int(sys.argv[-1])

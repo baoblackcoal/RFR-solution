@@ -1,6 +1,5 @@
 import os
 import sys
-import time
 
 import numpy as np
 import tensorflow as tf
@@ -171,7 +170,7 @@ def train(data, model, args):
                                                                max_iter, train_loss))
             if i % 2000 == 0 or (i + 1) == max_iter:
                 saver.save(sess, os.path.join(
-                    args.log_dir, 'lyrics_model.ckpt'), global_step=i)
+                    args.log_dir, 'jokes_model.ckpt'), global_step=i)
 
 
 def sample(data, model, args):
@@ -182,7 +181,7 @@ def sample(data, model, args):
         saver.restore(sess, ckpt)
 
         # initial phrase to warm RNN
-        for j in range(args.gen_joke_num ):
+        for j in range(args.gen_joke_num):
             prime = 'In '
             state = sess.run(model.cell.zero_state(1, tf.float32))
 
@@ -198,7 +197,7 @@ def sample(data, model, args):
                 return (int(np.searchsorted(t, np.random.rand(1) * s)))
 
             word = prime[-1]
-            lyrics = prime
+            jokes = prime
             for i in range(args.max_word_num):
                 x = np.zeros([1, 1])
                 x[0, 0] = data.char2id(word)
@@ -209,9 +208,9 @@ def sample(data, model, args):
                 word = data.id2char(sample_id)
                 sys.stdout.flush()
                 if word != '\n':
-                    lyrics += word
+                    jokes += word
                 else:
-                    print('Joke {}: {}'.format(j, lyrics))
+                    print('Joke {}: {}'.format(j, jokes))
                     break
 
 

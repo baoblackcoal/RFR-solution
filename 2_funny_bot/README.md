@@ -16,32 +16,37 @@ Run command `tensorboard --logdir=logs` in the current directory, then get embed
 
 ![embedding](./embedding.png)
 
-Generated 30 jokes that begain with "David ":
+Generated 30 jokes that begain with "According to a new survey, 70% of dog owners will ":
 
 ```
-Joke 0: David san Hold Lon, one who said they're nody 50,000 to paigy.
-Joke 1: David Stadboy Afriction," embers to seasing lidew to fasteat-by surphed "Gaking…ate down ago, a Woble Naticizina, Pople is, if Sand Phoe Palicaltation, are the nAx goved immighan Bane, 6— and were nohone Jesus."
-Joke 3: David Bell with your poll like.
-Joke 4: David Last fome!"  Unforting the President Obama won’t know reduce. It that he lost the giving untility on the resident was and storu it do the tebppting roo back says, Briver defechy-makiuceran Mitt Romney moved highest trated mean NASeason Home" game apolved, and our chafp."
-Joke 5: David were scandalizing from Jight, I’m it’s not start and Oprah Calate.
-Joke 7: David Burzer Yore Octuation like a budget."
-Joke 8: David Bieber from it said for a news on Ken NFL asked on a candidate because eCH my in terrime just walm worry than came attore's."
-Joke 9: David Steelogox I have crious are Doing to proposed a latered himne their penate that a tests?"
-Joke 10: David Moen Bill line incless.  Which piece settle Sating up of a rime from a did.
-Joke 11: David NBO poescall to hearing is Englic" of the least to sonized 100,000, ang they going to said for smart. If not a netirst for icling it is a Jew-"Happy.
-Joke 12: David anyding to walty ovate.
-Joke 13: David Socret Cher NJAh. MoSiend to is repeatesting no even mokies.
-Joke 16: David Romb she list nead trunfame agents.
-Joke 17: David Brady replate said that The Seal Wire.
-Joke 18: David after an open, but I the name and nun campaign to be gain robotes. When in Look to every that Palin, I woman to the ras-really conside though is Jong Utasm." Then McDonald's Days at the minded scord" that come his day off street group. Hip doesn’t know Looked at their-last news into the NBLs."
-Joke 19: David Ford, Comotives wo tell the ria be gets ame of thotes Apparently, she's not play they just working conths down in a woman West with the Unew of the apoe.
-Joke 20: David Queiness responded, “I’m partiseroboosh for a new moice, not Swicking Friday?"
-Joke 21: David Casticia Copologized his first from Whenth-momen."
-Joke 22: David in uran comployationals. Whichlove sixby be facters to think of Iutently tell."
-Joke 23: David Greau's liming are demainer running."  He said, "I’m alterts were success that Joomber fapless off?
-Joke 24: David get 2016, a woman Whore and show rated pertmopted that's the season celickies called when the Counder that had news to announced that HFhat's falld.
-Joke 25: David Shatulard fears said all cliped to wated and malijull shopen Caring new killing that a finaling on me - Christ-forned a President Obama long-tame emans."
-Joke 26: David is deair of Mate's true announced the make person, CEO for morning on no sation nage poll embarifation sy Parder was him DyDs Forn."
-Joke 28: David City Romney into eOthind on stoppaN, 'Sarnigal recorderation, American argers and Miry Joat.”
-Joke 29: David Warness of a." 
+Joke 1: According to a new survey, 70% of dog owners will goard eegger Experts "Who Film.
+Joke 2: According to a new survey, 70% of dog owners will serve, today, Edward Mid Casson is the pright Has allowed, "But' in he’s could NBAPticys.
+Joke 3: According to a new survey, 70% of dog owners will labs to him his this it, Cruise from a coming a new compon.
+Joke 4: According to a new survey, 70% of dog owners will resters to a fan ads in its more rand serion.
+Joke 5: According to a new survey, 70% of dog owners will not pornfued demain.
+Joke 6: According to a new survey, 70% of dog owners will alit shop bright offed his want now pall.
+Joke 7: According to a new survey, 70% of dog owners will deprise try story.
+Joke 8: According to a new survey, 70% of dog owners will Chica, a BBA in there dollary Review, Kardashirated ‘Of Clasts.
+Joke 9: According to a new survey, 70% of dog owners will teamise.
+Joke 10: According to a new survey, 70% of dog owners will natists what for you’re bring a Beyonch house team.
+Joke 11: According to a new survey, 70% of dog owners will be scorge hears" has been sex has not mistakers were stony, Thails and a new buil Clinton for the only friendly found out they calent—the made about Sen.
+Joke 12: According to a new survey, 70% of dog owners will a gitter said no feet arlest.
+Joke 13: According to a new survey, 70% of dog owners will magreetil.
+Joke 14: According to a new survey, 70% of dog owners will reduce she Patiuss the ses-OSD, but the Winko on the White and album is did.
+Joke 15: According to a new survey, 70% of dog owners will a haven That and using to thing you boy's said trave night from lochele pay hours, is everyone Milisten…to don’t new, thought after trybuty in Lible all the comistol as "wift.
+Joke 16: According to a new survey, 70% of dog owners will penited forwite start to looking a put this Dalrenween to protic think of they had a not game the migged one of airlow," thought see Riploused your stolen was Hillary Jearried said trenve.
+Joke 17: According to a new survey, 70% of dog owners will support Iirus everythinutine fun.
+Joke 18: According to a new survey, 70% of dog owners will suppusive: "There, a wood.
+Joke 19: According to a new survey, 70% of dog owners will birth of you likes invier of week mother it?.
+Joke 20: According to a new survey, 70% of dog owners will test letted"  at reportedly announced that, Bisney called at the missupy ever start, Kard just during CBan.
+Joke 21: According to a new survey, 70% of dog owners will so belia.
+Joke 22: According to a new survey, 70% of dog owners will mozen a flect, stop.
+Joke 23: According to a new survey, 70% of dog owners will go restaurantash concert, Mhen was watch Do is confus -fans to a new Kim weophneOr’s emairney awn they’re good on say be runtire restaurant has beating doctor "President.
+Joke 24: According to a new survey, 70% of dog owners will fans say, "You know, "verying scupity out sur impreadime do if there named any vieler" at letting still it our Plurder Kim Charged to doing to a stripped counting be for NFLA for the vean.
+Joke 25: According to a new survey, 70% of dog owners will sex pitt cluckily a shopping a budging abluces, its trader then said, "I revealed ambled be - never state asked of the CEO of the minner trying to watchie because his specites where week, Saw—The' prebrational colida man is reducits have a most upset's exact, wonderberg itean Days tanded I anything.
+Joke 26: According to a new survey, 70% of dog owners will felled to comes.
+Joke 27: According to a new survey, 70% of dog owners will guy week.
+Joke 28: According to a new survey, 70% of dog owners will just goos restaurant I dogg to trying will singler signerlian '.
+Joke 29: According to a new survey, 70% of dog owners will Vid backer save court?.
+Joke 30: According to a new survey, 70% of dog owners will can have mean patt down itest per" sold Ands.
 ```

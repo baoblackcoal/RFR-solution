@@ -182,7 +182,7 @@ def sample(data, model, args):
 
         # initial phrase to warm RNN
         for j in range(args.gen_joke_num ):
-            prime = 'David '
+            prime = 'According to a new survey, 70% of dog owners will '
             state = sess.run(model.cell.zero_state(1, tf.float32))
 
             for word in prime[:-1]:
@@ -207,10 +207,10 @@ def sample(data, model, args):
                 sample_id = weighted_pick(p)
                 word = data.id2char(sample_id)
                 sys.stdout.flush()
-                if word != '\n':
+                if word != '\n' and word != '.' and i != args.max_word_num-1:
                     jokes += word
                 else:
-                    print('Joke {}: {}'.format(j, jokes))
+                    print('Joke {}: {}.'.format(j+1, jokes))
                     break
 
 

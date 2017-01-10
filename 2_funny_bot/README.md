@@ -16,34 +16,32 @@ Run command `tensorboard --logdir=logs` in the current directory, then get embed
 
 ![embedding](./embedding.png)
 
-Generated 30 jokes that begain with "In ":
+Generated 30 jokes that begain with "David ":
 
 ```
-Joke 0: In the people place inclown bedword old suprentisture to do big Americans voties to running in a robor of too stent, his blacksage tweaks. The Willag Govnamed ever, but Tind has our callentinal Americans.
-Joke 2: In a woman Infeiner avanger Presidential up.
-Joke 3: In you term Ange person will gow Carlions a experieve to enginomy. Wh. The press Clinton is always night in the bad to Cration Wilnin is slight.
-Joke 4: In Jats of going weald weeferical premiere with a Christment cansworked almost fepered was in a feoters cartmed a woman would take, "The race of Tis same out NFL proscoy but apologized a has conservian.
-Joke 5: In the dresters hark.
-Joke 6: In other two more played I don’t players when the Canada. The Someone was that just over three Liden excring the campaign than hands video is acculd the Dary.  Anrers announced the Siring they was be's hands.
-Joke 7: In ite’s enterectio Brady pulled him in Metror in Get hear from havizs for new scener Hum explaine." And the 4-200 yea Angeles. In fact, Service Christigion in Indian Amazon with a give trend at an arrested the next same for men."
-Joke 8: In of doesn’t an is this wrote Chicked Justin Bieber castory Palvitions understaty and guessed while under Romney's hadter the wife was a referection.
-Joke 9: In Al Congressman tent-vod is disince the kids out of "Welucaved when up that to a 15-year-old. Which to A carry askes." Which poll switting he spent.
-Joke 10: In cer-show. They’re not parilly are called "Which you second William China. The home says, "Thought the bang? I want in a jumping a "Recrus immimes."
-Joke 11: In called "The Lade. 
-Joke 12: In ItA?
-Joke 14: In other finiticiday.
-Joke 15: In live still rumor."
-Joke 16: In new "Diernous. The no is defull callsny day endorsed on former.
-Joke 17: In the pornpell of the game is 2 Chilf to field Republicans.
-Joke 18: In Christie smoke a cheer ago-a turnes because your home of Lriled part, and his hate this fans awa is offereo Three was Dave they've hep the call and the suspezored temperation, if you’re a disconcists say to shagh."
-Joke 19: In fans were into?Jlack. However, don’t responi is being design's day in the sargetes in vyn!
-Joke 20: In the meg a list to “pleared. Apparently, Oprah Herda, a new interview, Gagas, and supports of "Things were she has a Ban perform, but they speeched to Verria with sonation of a suppite conally an eight has buying" for her Rirthing rule NBA millional tinds: “Flaver" arrivors up out men has 2 pisnell.
-Joke 21: In Brients with."
-Joke 22: In you had a Nacicans in Mayor issue shopped a hure a from made two say," they march finally house pants. Quie job Denzuss called discoven.
-Joke 23: In a rest PCulth, he was earie for their line with the Consures to text Mexim."
-Joke 24: In the still pumed by meanstork.  FOA six Goldens servet them to have start pain Sis guy, Justs megn gotta.
-Joke 25: In Sugara bitch now helps for a consular House As has keil readashian to angry should by I’d if you're reported the HefBmina holk.”
-Joke 27: In Ladensiona said that Cairison's know then it's course, ever than the councing in gave not money Sired it a hath those of family are much fap."
-Joke 28: In 8 for the assymests tought to supported them. Even in, "folla was go on the big with a President Obamacole. When a spokesperson why when he discox." It couple at his frieds.
-Joke 29: In reused the fielomed for a do a pregnabes.  Nort has ILOG loal medies sex runcheomers will partfling now honite Barger have rooks. I three won’t parth Willice, he have “Noboved Presidoo. Nept Zilming conternide, I dollard Rick food Christie viSisted that may in Lutle.
+Joke 0: David san Hold Lon, one who said they're nody 50,000 to paigy.
+Joke 1: David Stadboy Afriction," embers to seasing lidew to fasteat-by surphed "Gaking…ate down ago, a Woble Naticizina, Pople is, if Sand Phoe Palicaltation, are the nAx goved immighan Bane, 6— and were nohone Jesus."
+Joke 3: David Bell with your poll like.
+Joke 4: David Last fome!"  Unforting the President Obama won’t know reduce. It that he lost the giving untility on the resident was and storu it do the tebppting roo back says, Briver defechy-makiuceran Mitt Romney moved highest trated mean NASeason Home" game apolved, and our chafp."
+Joke 5: David were scandalizing from Jight, I’m it’s not start and Oprah Calate.
+Joke 7: David Burzer Yore Octuation like a budget."
+Joke 8: David Bieber from it said for a news on Ken NFL asked on a candidate because eCH my in terrime just walm worry than came attore's."
+Joke 9: David Steelogox I have crious are Doing to proposed a latered himne their penate that a tests?"
+Joke 10: David Moen Bill line incless.  Which piece settle Sating up of a rime from a did.
+Joke 11: David NBO poescall to hearing is Englic" of the least to sonized 100,000, ang they going to said for smart. If not a netirst for icling it is a Jew-"Happy.
+Joke 12: David anyding to walty ovate.
+Joke 13: David Socret Cher NJAh. MoSiend to is repeatesting no even mokies.
+Joke 16: David Romb she list nead trunfame agents.
+Joke 17: David Brady replate said that The Seal Wire.
+Joke 18: David after an open, but I the name and nun campaign to be gain robotes. When in Look to every that Palin, I woman to the ras-really conside though is Jong Utasm." Then McDonald's Days at the minded scord" that come his day off street group. Hip doesn’t know Looked at their-last news into the NBLs."
+Joke 19: David Ford, Comotives wo tell the ria be gets ame of thotes Apparently, she's not play they just working conths down in a woman West with the Unew of the apoe.
+Joke 20: David Queiness responded, “I’m partiseroboosh for a new moice, not Swicking Friday?"
+Joke 21: David Casticia Copologized his first from Whenth-momen."
+Joke 22: David in uran comployationals. Whichlove sixby be facters to think of Iutently tell."
+Joke 23: David Greau's liming are demainer running."  He said, "I’m alterts were success that Joomber fapless off?
+Joke 24: David get 2016, a woman Whore and show rated pertmopted that's the season celickies called when the Counder that had news to announced that HFhat's falld.
+Joke 25: David Shatulard fears said all cliped to wated and malijull shopen Caring new killing that a finaling on me - Christ-forned a President Obama long-tame emans."
+Joke 26: David is deair of Mate's true announced the make person, CEO for morning on no sation nage poll embarifation sy Parder was him DyDs Forn."
+Joke 28: David City Romney into eOthind on stoppaN, 'Sarnigal recorderation, American argers and Miry Joat.”
+Joke 29: David Warness of a." 
 ```

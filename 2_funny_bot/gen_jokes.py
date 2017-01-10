@@ -181,8 +181,8 @@ def sample(data, model, args):
         saver.restore(sess, ckpt)
 
         # initial phrase to warm RNN
-        for j in range(args.gen_joke_num):
-            prime = 'In '
+        for j in range(args.gen_joke_num ):
+            prime = 'David '
             state = sess.run(model.cell.zero_state(1, tf.float32))
 
             for word in prime[:-1]:

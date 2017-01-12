@@ -2,8 +2,8 @@
 inspired from https://github.com/leido/char-rnn-cn
 
 ## Requirement
-tensorflow >= 0.12.1
-python3
+tensorflow 0.12.1
+python3.5.2
 
 ## Train
 `python3 gen_jokes.py 0`

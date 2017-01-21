@@ -7,13 +7,13 @@ LOG_DIR = './saved_models'
 idx_to_vocab = None
 vocab_to_idx = None
 
+
 def load_data():
     global idx_to_vocab, vocab_to_idx
     vocab = open('data/latex_vocab.txt').read().split('\n')
-    vocab_to_idx = dict([(vocab[i], i+4) for i in range(len(vocab))])
-    idx_to_vocab = {value:key for key, value in vocab_to_idx.items()}
-    # idx_to_vocab = {idx_to_vocab.update({i:i}) for i in range(4)}
-    idx_to_vocab.update({0:0})
+    vocab_to_idx = dict([(vocab[i], i + 4) for i in range(len(vocab))])
+    idx_to_vocab = {value: key for key, value in vocab_to_idx.items()}
+    for i in range(4): idx_to_vocab.update({i: i})
     formulas = open('data/formulas.norm.lst').read().split('\n')
 
     # four meta keywords
@@ -153,7 +153,7 @@ def build_model(inp, batch_size, num_rows, num_columns, dec_seq_len):
 
     cnn = init_cnn(inp)
 
-    # f unction for map to apply the rnn to each row
+    # function for map to apply the rnn to each row
     def fn(inp):
         enc_init_shape = [batch_size, enc_lstm_dim]
         with tf.variable_scope('encoder_rnn'):
@@ -220,14 +220,6 @@ num_words = tf.placeholder(tf.int32)
 true_labels = tf.placeholder(tf.int32)
 start_time = time.time()
 
-print("Building Model")
-_, (output, state) = build_model(inp, batch_size, num_rows, num_columns, num_words)
-cross_entropy = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(output, true_labels))
-train_step = tf.train.AdadeltaOptimizer(learning_rate).minimize(cross_entropy)
-output_idx = tf.to_int32(tf.argmax(output, 2))
-correct_prediction = tf.equal(output_idx, true_labels)
-accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-
 print("Loading Data")
 train, val, test = load_data()
 train = batchify(train, batch_size)
@@ -236,8 +228,18 @@ random.shuffle(train)
 val = batchify(val, batch_size)
 test_batch = batchify(test, batch_size)
 
+print("Building Model")
+_, (output, state) = build_model(inp, batch_size, num_rows, num_columns, num_words)
+cross_entropy = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(output, true_labels))
+train_step = tf.train.AdadeltaOptimizer(learning_rate).minimize(cross_entropy)
+output_idx = tf.to_int32(tf.argmax(output, 2))
+correct_prediction = tf.equal(output_idx, true_labels)
+accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+
+
 def run_train():
     global lr
+
     last_val_acc = 0
     reduce_lr = 0
     with tf.Session() as sess:
@@ -322,21 +324,31 @@ def run_sample():
         print(ckpt)
         saver.restore(sess, ckpt)
 
-        images, labels = train[0]
-        feed_dict={inp: images, \
+        images, labels = test[0]
+        images = np.array([images] * batch_size)
+        labels = np.array([labels] * batch_size)
+        # print('images', images.shape, 'labels', labels.shape)
+        images = np.expand_dims(images, axis=3)
+        labels = np.expand_dims(labels, axis=0)
+        labels = np.concatenate(labels, 0)
+        # print('images', images.shape, 'labels', labels.shape)
+
+        feed_dict = {inp: images, \
                      true_labels: labels, \
                      num_rows: images.shape[1], \
                      num_columns: images.shape[2], \
-                     num_words: labels.shape[1]}
+                     num_words: 300}
         idx = sess.run(output_idx, feed_dict)
-        idx[idx < 4] = 0
+        idx = idx[0]
+        # print(idx)
+        idx[idx < 4] = 2
         idx[idx > np.max(vocab_to_idx)] = 0
-        print(idx)
-        print('output idx',  [idx_to_vocab[i] for i in np.reshape(idx, -1)])
+        # print(idx)
+        print('output idx', [idx_to_vocab[i] for i in np.reshape(idx, -1)])
 
 
 def main():
-    mode = 0
+    mode = 1
     if mode == 0:
         run_train()
     else:
@@ -344,4 +356,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main();
+    main()

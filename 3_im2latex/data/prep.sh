@@ -10,7 +10,7 @@ tar -xzvf formula_images.tar.gz
 
 echo 'Preprocessing'
 cd im2markup
-#git submodule update --init --recursive
+git submodule update --init --recursive
 python scripts/preprocessing/preprocess_images.py --input-dir ../formula_images --output-dir ../images_processed
 
 if node -v; then

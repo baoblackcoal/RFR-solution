@@ -1,0 +1,3 @@
+[submodule "3_im2latex/data/im2markup"]
+	path = 3_im2latex/data/im2markup
+	url = https://github.com/harvardnlp/im2markup.git

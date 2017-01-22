@@ -48,10 +48,11 @@ def value_gradient():
 
 
 summaries_dir = "/tmp/actor_critic"
-sess = tf.InteractiveSession()
 if tf.gfile.Exists(summaries_dir):
     tf.gfile.DeleteRecursively(summaries_dir)
 tf.gfile.MakeDirs(summaries_dir)
+
+sess = tf.InteractiveSession()
 policy_grad = policy_gradient()
 value_grad = value_gradient()
 merged_summary_op = tf.merge_all_summaries()

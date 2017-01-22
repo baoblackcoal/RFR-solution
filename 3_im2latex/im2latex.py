@@ -3,7 +3,8 @@ from PIL import Image
 import numpy as np
 import tensorflow as tf
 
-LOG_DIR = './saved_models'
+
+saved_models_dir = 'saved_models'
 idx_to_vocab = None
 vocab_to_idx = None
 
@@ -45,6 +46,8 @@ def load_data():
     val = val[:int(len(val) * data_set_scale)]
     test = test[:int(len(test) * data_set_scale)]
     print('process len train, val, test', len(train), len(val), len(test))
+
+    print('sample png file name:', test[0].split(' ')[0])
 
     def import_images(datum):
         datum = datum.split(' ')
@@ -212,12 +215,6 @@ batch_size = 16
 epochs = 100
 lr = 0.1
 min_lr = 0.001
-learning_rate = tf.placeholder(tf.float32)
-inp = tf.placeholder(tf.float32)
-num_rows = tf.placeholder(tf.int32)
-num_columns = tf.placeholder(tf.int32)
-num_words = tf.placeholder(tf.int32)
-true_labels = tf.placeholder(tf.int32)
 start_time = time.time()
 
 print("Loading Data")
@@ -229,12 +226,25 @@ val = batchify(val, batch_size)
 test_batch = batchify(test, batch_size)
 
 print("Building Model")
+learning_rate = tf.placeholder(tf.float32)
+inp = tf.placeholder(tf.float32)
+num_rows = tf.placeholder(tf.int32)
+num_columns = tf.placeholder(tf.int32)
+num_words = tf.placeholder(tf.int32)
+true_labels = tf.placeholder(tf.int32)
+train_accuracy_input = tf.placeholder(tf.float32)
+val_accuracy_input = tf.placeholder(tf.float32)
+train_accuracy = train_accuracy_input
+val_accuracy = val_accuracy_input
 _, (output, state) = build_model(inp, batch_size, num_rows, num_columns, num_words)
 cross_entropy = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(output, true_labels))
 train_step = tf.train.AdadeltaOptimizer(learning_rate).minimize(cross_entropy)
 output_idx = tf.to_int32(tf.argmax(output, 2))
 correct_prediction = tf.equal(output_idx, true_labels)
 accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+tf.summary.scalar('cross_entropy', cross_entropy)
+tf.summary.scalar('train_accuracy', train_accuracy)
+tf.summary.scalar('val_accuracy', val_accuracy)
 
 
 def run_train():
@@ -242,9 +252,19 @@ def run_train():
 
     last_val_acc = 0
     reduce_lr = 0
+    global_step = 0
+    train_accuracy_value = 0.
+    val_accuracy_value = 0.
     with tf.Session() as sess:
         try:
+            summaries_dir = "summaries_dir"
+            if tf.gfile.Exists(summaries_dir):
+                tf.gfile.DeleteRecursively(summaries_dir)
+            tf.gfile.MakeDirs(summaries_dir)
+
             sess.run(tf.global_variables_initializer())
+            merged_op = tf.summary.merge_all()
+            writer = tf.summary.FileWriter(summaries_dir, sess.graph)
             saver = tf.train.Saver()
             print("Training")
             for i in range(epochs):
@@ -255,28 +275,32 @@ def run_train():
                 epoch_start_time = time.time()
                 batch_50_start = epoch_start_time
                 for j in range(len(train)):
-                    print('j', j, len(train))
+                    global_step += 1
                     images, labels = train[j]
                     if j < 5 or j % 50 == 0:
-                        train_accuracy = accuracy.eval(feed_dict={inp: images, \
-                                                                  true_labels: labels, \
-                                                                  num_rows: images.shape[1], \
-                                                                  num_columns: images.shape[2], \
-                                                                  num_words: labels.shape[1]})
+                        train_accuracy_value = accuracy.eval(feed_dict={inp: images, \
+                                                                        true_labels: labels, \
+                                                                        num_rows: images.shape[1], \
+                                                                        num_columns: images.shape[2], \
+                                                                        num_words: labels.shape[1]})
                         new_time = time.time()
                         print("step %d/%d, training accuracy %g, took %f mins" % \
-                              (j, len(train), train_accuracy, (new_time - batch_50_start) / 60))
+                              (j, len(train), train_accuracy_value, (new_time - batch_50_start) / 60))
                         batch_50_start = new_time
-                    train_step.run(feed_dict={learning_rate: lr, \
-                                              inp: images, \
-                                              true_labels: labels, \
-                                              num_rows: images.shape[1], \
-                                              num_columns: images.shape[2], \
-                                              num_words: labels.shape[1]})
+                    summary, _, _ = sess.run([merged_op, train_step, train_accuracy], \
+                                             feed_dict={learning_rate: lr,
+                                                        inp: images, \
+                                                        true_labels: labels, \
+                                                        num_rows: images.shape[1], \
+                                                        num_columns: images.shape[2], \
+                                                        num_words: labels.shape[1],
+                                                        train_accuracy_input: train_accuracy_value,
+                                                        val_accuracy_input: val_accuracy_value})
+                    writer.add_summary(summary, global_step)
                 print("Time for epoch:%f mins" % ((time.time() - epoch_start_time) / 60))
                 if i % (epochs / 20) == 0 and i != 0:
                     print('saver.save, global_step =', i)
-                    saver.save(sess, os.path.join('saved_models', 'im2latex.ckpt'), global_step=i)
+                    saver.save(sess, os.path.join(saved_models_dir, 'im2latex.ckpt'), global_step=i)
                 print("Running on Validation Set")
                 accs = []
                 for j in range(len(val)):
@@ -288,21 +312,16 @@ def run_train():
                                                             num_words: labels.shape[1]})
                     accs.append(val_accuracy)
                 val_acc = sess.run(tf.reduce_mean(accs))
+                val_accuracy_value = val_acc
                 if (val_acc - last_val_acc) >= .01:
                     reduce_lr = 0
                 else:
-                    reduce_lr = reduce_lr + 1
+                    reduce_lr += reduce_lr
                 last_val_acc = val_acc
                 print("val accuracy %g" % val_acc)
         finally:
-            # print 'Saving model'
-            # saver = tf.train.Saver()
-            # # id = 'saved_models/model-'+time.strftime("%d-%m-%Y--%H-%M")
-            # id = 'saved_models'
-            # os.mkdir(id)
-            # save_path = saver.save(sess, 'model-'+time.strftime("%d-%m-%Y--%H-%M"))
             print('Finally saving model')
-            saver.save(sess, os.path.join('saved_models', 'im2latex.ckpt'), global_step=i)
+            saver.save(sess, os.path.join(saved_models_dir, 'im2latex.ckpt'), global_step=i)
             print('Running on Test Set')
             accs = []
             for j in range(len(test_batch)):
@@ -320,7 +339,7 @@ def run_train():
 def run_sample():
     saver = tf.train.Saver()
     with tf.Session() as sess:
-        ckpt = tf.train.latest_checkpoint(LOG_DIR)
+        ckpt = tf.train.latest_checkpoint(saved_models_dir)
         print(ckpt)
         saver.restore(sess, ckpt)
 
@@ -341,7 +360,7 @@ def run_sample():
         idx = sess.run(output_idx, feed_dict)
         idx = idx[0]
         # print(idx)
-        idx[idx < 4] = 2
+        idx[idx < 0] = 2
         idx[idx > np.max(vocab_to_idx)] = 0
         # print(idx)
         print('output idx', [idx_to_vocab[i] for i in np.reshape(idx, -1)])

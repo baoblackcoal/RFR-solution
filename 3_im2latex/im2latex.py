@@ -40,12 +40,12 @@ def load_data():
     val = open('data/validate_filter.lst').read().split('\n')[:-1]
     test = open('data/test_filter.lst').read().split('\n')[:-1]
 
-    print('len train, val, test', len(train), len(val), len(test))
-    data_set_scale = 1.0 / 400
-    train = train[:int(len(train) * data_set_scale)]
-    val = val[:int(len(val) * data_set_scale)]
-    test = test[:int(len(test) * data_set_scale)]
-    print('process len train, val, test', len(train), len(val), len(test))
+    # print('len train, val, test', len(train), len(val), len(test))
+    # data_set_scale = 1.0 / 400
+    # train = train[:int(len(train) * data_set_scale)]
+    # val = val[:int(len(val) * data_set_scale)]
+    # test = test[:int(len(test) * data_set_scale)]
+    # print('process len train, val, test', len(train), len(val), len(test))
 
     print('sample png file name:', test[0].split(' ')[0])
 
@@ -367,7 +367,7 @@ def run_sample():
 
 
 def main():
-    mode = 1
+    mode = 0
     if mode == 0:
         run_train()
     else:

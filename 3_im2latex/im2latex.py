@@ -2,8 +2,9 @@ import random, time, os, decoder
 from PIL import Image
 import numpy as np
 import tensorflow as tf
+import sys
 
-
+SMALL_DATA_SET = 0 # 0-large data set(for gpu), 1-small data set(for cpu debug)
 saved_models_dir = 'saved_models'
 idx_to_vocab = None
 vocab_to_idx = None
@@ -40,14 +41,16 @@ def load_data():
     val = open('data/validate_filter.lst').read().split('\n')[:-1]
     test = open('data/test_filter.lst').read().split('\n')[:-1]
 
-    # print('len train, val, test', len(train), len(val), len(test))
-    # data_set_scale = 1.0 / 400
-    # train = train[:int(len(train) * data_set_scale)]
-    # val = val[:int(len(val) * data_set_scale)]
-    # test = test[:int(len(test) * data_set_scale)]
-    # print('process len train, val, test', len(train), len(val), len(test))
+    if SMALL_DATA_SET:
+        print('use small data set')
+        print('len train, val, test', len(train), len(val), len(test))
+        data_set_scale = 1.0 / 400
+        train = train[:int(len(train) * data_set_scale)]
+        val = val[:int(len(val) * data_set_scale)]
+        test = test[:int(len(test) * data_set_scale)]
+        print('process len train, val, test', len(train), len(val), len(test))
 
-    print('sample png file name:', test[0].split(' ')[0])
+    print('sample png file name: {}'.format(test[0].split(' ')[0]))
 
     def import_images(datum):
         datum = datum.split(' ')
@@ -211,7 +214,7 @@ def build_model(inp, batch_size, num_rows, num_columns, dec_seq_len):
     return (encoder_output, decoder_output)
 
 
-batch_size = 16
+batch_size = 20
 epochs = 100
 lr = 0.1
 min_lr = 0.001
@@ -261,6 +264,8 @@ def run_train():
             if tf.gfile.Exists(summaries_dir):
                 tf.gfile.DeleteRecursively(summaries_dir)
             tf.gfile.MakeDirs(summaries_dir)
+            if not tf.gfile.Exists(saved_models_dir):
+                tf.gfile.MakeDirs(saved_models_dir)
 
             sess.run(tf.global_variables_initializer())
             merged_op = tf.summary.merge_all()
@@ -287,6 +292,12 @@ def run_train():
                         print("step %d/%d, training accuracy %g, took %f mins" % \
                               (j, len(train), train_accuracy_value, (new_time - batch_50_start) / 60))
                         batch_50_start = new_time
+
+                        # about 3.5 minutes per 50 global_step when run in aws p2.xlarge
+                        if j > 5:
+                            print('saver.save, global_step =', global_step)
+                            saver.save(sess, os.path.join(saved_models_dir, 'im2latex.ckpt'), global_step=global_step)
+
                     summary, _, _ = sess.run([merged_op, train_step, train_accuracy], \
                                              feed_dict={learning_rate: lr,
                                                         inp: images, \
@@ -297,10 +308,8 @@ def run_train():
                                                         train_accuracy_input: train_accuracy_value,
                                                         val_accuracy_input: val_accuracy_value})
                     writer.add_summary(summary, global_step)
+
                 print("Time for epoch:%f mins" % ((time.time() - epoch_start_time) / 60))
-                if i % (epochs / 20) == 0 and i != 0:
-                    print('saver.save, global_step =', i)
-                    saver.save(sess, os.path.join(saved_models_dir, 'im2latex.ckpt'), global_step=i)
                 print("Running on Validation Set")
                 accs = []
                 for j in range(len(val)):
@@ -321,7 +330,7 @@ def run_train():
                 print("val accuracy %g" % val_acc)
         finally:
             print('Finally saving model')
-            saver.save(sess, os.path.join(saved_models_dir, 'im2latex.ckpt'), global_step=i)
+            saver.save(sess, os.path.join(saved_models_dir, 'im2latex.ckpt'), global_step=global_step)
             print('Running on Test Set')
             accs = []
             for j in range(len(test_batch)):
@@ -367,11 +376,23 @@ def run_sample():
 
 
 def main():
-    mode = 0
-    if mode == 0:
-        run_train()
+    msg = """
+    Usage:
+    Training:
+        python im2latex.py 0
+    Sampling:
+        python im2latex.py 1
+    """
+    if len(sys.argv) == 2:
+        mode = int(sys.argv[-1])
+        print('--Sampling--' if mode else '--Training--')
+        if mode == 0:
+            run_train()
+        else:
+            run_sample()
     else:
-        run_sample()
+        print(msg)
+        sys.exit(1)
 
 
 if __name__ == "__main__":

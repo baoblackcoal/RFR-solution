@@ -4,7 +4,7 @@ import numpy as np
 import tensorflow as tf
 import sys
 
-SMALL_DATA_SET = 0 # 0-large data set(for gpu), 1-small data set(for cpu debug)
+SMALL_DATA_SET = 1 # 0-large data set(for gpu), 1-small data set(for cpu debug)
 saved_models_dir = 'saved_models_1'
 summaries_dir = "summaries_dir_1"
 idx_to_vocab = None
@@ -255,7 +255,6 @@ tf.summary.scalar('val_accuracy', val_accuracy)
 
 def run_train():
     global lr
-
     last_val_acc = 0
     reduce_lr = 0
     global_step = 0

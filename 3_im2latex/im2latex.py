@@ -6,6 +6,7 @@ import sys
 
 SMALL_DATA_SET = 0 # 0-large data set(for gpu), 1-small data set(for cpu debug)
 saved_models_dir = 'saved_models'
+summaries_dir = "summaries_dir_1"
 idx_to_vocab = None
 vocab_to_idx = None
 
@@ -49,6 +50,8 @@ def load_data():
         val = val[:int(len(val) * data_set_scale)]
         test = test[:int(len(test) * data_set_scale)]
         print('process len train, val, test', len(train), len(val), len(test))
+    else:
+        print('use large data set')
 
     print('sample png file name: {}'.format(test[0].split(' ')[0]))
 
@@ -256,11 +259,10 @@ def run_train():
     last_val_acc = 0
     reduce_lr = 0
     global_step = 0
-    train_accuracy_value = 0.
-    val_accuracy_value = 0.
+    train_accuracy_value = -1.0
+    val_accuracy_value = -1.0
     with tf.Session() as sess:
         try:
-            summaries_dir = "summaries_dir"
             if tf.gfile.Exists(summaries_dir):
                 tf.gfile.DeleteRecursively(summaries_dir)
             tf.gfile.MakeDirs(summaries_dir)
@@ -289,8 +291,8 @@ def run_train():
                                                                         num_columns: images.shape[2], \
                                                                         num_words: labels.shape[1]})
                         new_time = time.time()
-                        print("step %d/%d, training accuracy %g, took %f mins" % \
-                              (j, len(train), train_accuracy_value, (new_time - batch_50_start) / 60))
+                        print("step %d/%d, training accuracy %g, val accuracy %g, took %f mins" % \
+                              (j, len(train), train_accuracy_value, val_accuracy_value, (new_time - batch_50_start) / 60))
                         batch_50_start = new_time
 
                         # about 3.5 minutes per 50 global_step when run in aws p2.xlarge
@@ -298,15 +300,16 @@ def run_train():
                             print('saver.save, global_step =', global_step)
                             saver.save(sess, os.path.join(saved_models_dir, 'im2latex.ckpt'), global_step=global_step)
 
-                    summary, _, _ = sess.run([merged_op, train_step, train_accuracy], \
-                                             feed_dict={learning_rate: lr,
-                                                        inp: images, \
-                                                        true_labels: labels, \
-                                                        num_rows: images.shape[1], \
-                                                        num_columns: images.shape[2], \
-                                                        num_words: labels.shape[1],
-                                                        train_accuracy_input: train_accuracy_value,
-                                                        val_accuracy_input: val_accuracy_value})
+                    summary, loss, _, _ = sess.run([merged_op, cross_entropy, train_step, train_accuracy], \
+                                                   feed_dict={learning_rate: lr,
+                                                              inp: images, \
+                                                              true_labels: labels, \
+                                                              num_rows: images.shape[1], \
+                                                              num_columns: images.shape[2], \
+                                                              num_words: labels.shape[1],
+                                                              train_accuracy_input: train_accuracy_value,
+                                                              val_accuracy_input: val_accuracy_value})
+                    print('loss', loss)
                     writer.add_summary(summary, global_step)
 
                 print("Time for epoch:%f mins" % ((time.time() - epoch_start_time) / 60))

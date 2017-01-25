@@ -5,7 +5,7 @@ import tensorflow as tf
 import sys
 
 SMALL_DATA_SET = 0 # 0-large data set(for gpu), 1-small data set(for cpu debug)
-saved_models_dir = 'saved_models'
+saved_models_dir = 'saved_models_1'
 summaries_dir = "summaries_dir_1"
 idx_to_vocab = None
 vocab_to_idx = None

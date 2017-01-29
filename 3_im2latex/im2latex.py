@@ -258,8 +258,8 @@ def run_train():
     last_val_acc = 0
     reduce_lr = 0
     global_step = 0
-    train_accuracy_value = -1.0
-    val_accuracy_value = -1.0
+    train_accuracy_value = 0
+    val_accuracy_value = 0
     with tf.Session() as sess:
         try:
             if tf.gfile.Exists(summaries_dir):

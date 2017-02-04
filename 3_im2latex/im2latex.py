@@ -238,10 +238,8 @@ num_rows = tf.placeholder(tf.int32)
 num_columns = tf.placeholder(tf.int32)
 num_words = tf.placeholder(tf.int32)
 true_labels = tf.placeholder(tf.int32)
-train_accuracy_input = tf.placeholder(tf.float32)
-val_accuracy_input = tf.placeholder(tf.float32)
-train_accuracy = train_accuracy_input
-val_accuracy = val_accuracy_input
+train_accuracy = tf.placeholder(tf.float32)
+val_accuracy = tf.placeholder(tf.float32)
 _, (output, state) = build_model(inp, batch_size, num_rows, num_columns, num_words)
 cross_entropy = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(output, true_labels))
 train_step = tf.train.AdadeltaOptimizer(learning_rate).minimize(cross_entropy)
@@ -258,8 +256,8 @@ def run_train():
     last_val_acc = 0
     reduce_lr = 0
     global_step = 0
-    train_accuracy_value = 0
-    val_accuracy_value = 0
+    train_accuracy_value = .0
+    val_accuracy_value = .0
     with tf.Session() as sess:
         try:
             if tf.gfile.Exists(summaries_dir):
@@ -299,15 +297,15 @@ def run_train():
                             print('saver.save, global_step =', global_step)
                             saver.save(sess, os.path.join(saved_models_dir, 'im2latex.ckpt'), global_step=global_step)
 
-                    summary, loss, _, _ = sess.run([merged_op, cross_entropy, train_step, train_accuracy], \
+                    summary, loss, _= sess.run([merged_op, cross_entropy, train_step], \
                                                    feed_dict={learning_rate: lr,
                                                               inp: images, \
                                                               true_labels: labels, \
                                                               num_rows: images.shape[1], \
                                                               num_columns: images.shape[2], \
                                                               num_words: labels.shape[1],
-                                                              train_accuracy_input: train_accuracy_value,
-                                                              val_accuracy_input: val_accuracy_value})
+                                                              train_accuracy: train_accuracy_value,
+                                                              val_accuracy: val_accuracy_value})
                     print('loss', loss)
                     writer.add_summary(summary, global_step)
 
@@ -316,12 +314,12 @@ def run_train():
                 accs = []
                 for j in range(len(val)):
                     images, labels = val[j]
-                    val_accuracy = accuracy.eval(feed_dict={inp: images, \
+                    acc = accuracy.eval(feed_dict={inp: images, \
                                                             true_labels: labels, \
                                                             num_rows: images.shape[1], \
                                                             num_columns: images.shape[2], \
                                                             num_words: labels.shape[1]})
-                    accs.append(val_accuracy)
+                    accs.append(acc)
                 val_acc = sess.run(tf.reduce_mean(accs))
                 val_accuracy_value = val_acc
                 if (val_acc - last_val_acc) >= .01:

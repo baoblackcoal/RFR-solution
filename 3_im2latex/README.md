@@ -5,6 +5,9 @@ This is a TensorFlow port of harvardnlp's [im2markup](https://github.com/harvard
 ## Model
 Briefly, the model uses a convolutional network followed by a Bi-RNN row encoder as an encoder, and an LSTM with an attention mechanism as a decoder.
 
+## Requirement
+python2.7.12
+
 ## Run
 Run the `data/prep.sh` (will install nodeJS if not already installed) script, and then run `python im2latex.py 0` for training and run `python im2latex.py 1` for sampling.
 

@@ -15,20 +15,27 @@ class ReplayMemory:
     self.memory_size = config.memory_size
     self.actions = np.empty(self.memory_size, dtype = np.uint8)
     self.rewards = np.empty(self.memory_size, dtype = np.integer)
-    self.screens = np.empty((self.memory_size, config.screen_height, config.screen_width), dtype = np.float16)
+    # print(self.memory_size, config.screen_height, config.screen_width)
+    # self.screens = np.empty((self.memory_size, config.screen_height, config.screen_width), dtype = np.float16)
+    self.screens = np.empty((self.memory_size, config.ram_size), dtype = np.float16)
     self.terminals = np.empty(self.memory_size, dtype = np.bool)
     self.history_length = config.history_length
-    self.dims = (config.screen_height, config.screen_width)
+    # self.dims = (config.screen_height, config.screen_width)
+    self.dims = (config.ram_size)
     self.batch_size = config.batch_size
     self.count = 0
     self.current = 0
 
     # pre-allocate prestates and poststates for minibatch
-    self.prestates = np.empty((self.batch_size, self.history_length) + self.dims, dtype = np.float16)
-    self.poststates = np.empty((self.batch_size, self.history_length) + self.dims, dtype = np.float16)
+    # self.prestates = np.empty((self.batch_size, self.history_length) + self.dims, dtype = np.float16)
+    # self.poststates = np.empty((self.batch_size, self.history_length) + self.dims, dtype = np.float16)
+    self.prestates = np.empty((self.batch_size, self.history_length, self.dims), dtype = np.float16)
+    self.poststates = np.empty((self.batch_size, self.history_length, self.dims), dtype = np.float16)
 
   def add(self, screen, reward, action, terminal):
-    assert screen.shape == self.dims
+    # print('add----------------------------------------')
+    # print(screen.shape, self.dims)
+    assert screen.shape[0] == self.dims
     # NB! screen is post-state, after action and reward
     self.actions[self.current] = action
     self.rewards[self.current] = reward
@@ -79,11 +86,12 @@ class ReplayMemory:
     rewards = self.rewards[indexes]
     terminals = self.terminals[indexes]
 
-    if self.cnn_format == 'NHWC':
-      return np.transpose(self.prestates, (0, 2, 3, 1)), actions, \
-        rewards, np.transpose(self.poststates, (0, 2, 3, 1)), terminals
-    else:
-      return self.prestates, actions, rewards, self.poststates, terminals
+    # if self.cnn_format == 'NHWC':
+    #   return np.transpose(self.prestates, (0, 2, 3, 1)), actions, \
+    #     rewards, np.transpose(self.poststates, (0, 2, 3, 1)), terminals
+    # else:
+    #   return self.prestates, actions, rewards, self.poststates, terminals
+    return self.prestates, actions, rewards, self.poststates, terminals
 
   def save(self):
     for idx, (name, array) in enumerate(

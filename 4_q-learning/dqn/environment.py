@@ -15,20 +15,23 @@ class Environment(object):
 
     self._screen = None
     self.reward = 0
-    self.terminal = True
+    # self.terminal = True
+    self.terminal = False
 
   def new_game(self, from_random_game=False):
-    if self.lives == 0:
-      self._screen = self.env.reset()
-    self._step(0)
+    # if self.lives == 0:
+    #   self._screen = self.env.reset()
+    self._screen = self.env.reset()
+
+    # self._step(0)
     self.render()
     return self.screen, 0, 0, self.terminal
 
   def new_random_game(self):
     self.new_game(True)
-    for _ in xrange(random.randint(0, self.random_start - 1)):
-      self._step(0)
-    self.render()
+    # for _ in xrange(random.randint(0, self.random_start - 1)):
+    #   self._step(0)
+    # self.render()
     return self.screen, 0, 0, self.terminal
 
   def _step(self, action):
@@ -40,7 +43,7 @@ class Environment(object):
 
   @ property
   def screen(self):
-    return imresize(rgb2gray(self._screen)/255., self.dims)
+    return self._screen
     #return cv2.resize(cv2.cvtColor(self._screen, cv2.COLOR_BGR2YCR_CB)/255., self.dims)[:,:,0]
 
   @property
@@ -68,17 +71,18 @@ class GymEnvironment(Environment):
 
   def act(self, action, is_training=True):
     cumulated_reward = 0
-    start_lives = self.lives
+    # start_lives = self.lives
 
     for _ in xrange(self.action_repeat):
       self._step(action)
       cumulated_reward = cumulated_reward + self.reward
 
-      if is_training and start_lives > self.lives:
-        cumulated_reward -= 1
-        self.terminal = True
+      # if is_training and start_lives > self.lives:
+      #   cumulated_reward -= 1
+      #   self.terminal = True
 
       if self.terminal:
+        # cumulated_reward = 0
         break
 
     self.reward = cumulated_reward

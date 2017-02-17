@@ -17,6 +17,8 @@ class Agent(BaseModel):
     self.sess = sess
     self.weight_dir = 'weights'
 
+    self.ep = 0
+
     self.env = environment
     self.history = History(self.config)
     self.memory = ReplayMemory(self.config, self.model_dir)
@@ -30,7 +32,10 @@ class Agent(BaseModel):
 
   def train(self):
     start_step = self.step_op.eval()
+    self.per_step = start_step
     start_time = time.time()
+
+    running_reward = None
 
     num_game, self.update_count, ep_reward = 0, 0, 0.
     total_reward, self.total_loss, self.total_q = 0., 0., 0.
@@ -61,17 +66,21 @@ class Agent(BaseModel):
         num_game += 1
         ep_rewards.append(ep_reward)
         ep_reward = 0.
+
+        ep_reward_last = ep_rewards[-1]
+        running_reward = ep_reward_last if running_reward is None else running_reward * 0.99 + ep_reward_last * 0.01
       else:
         ep_reward += reward
 
       actions.append(action)
       total_reward += reward
 
-      if self.step >= self.learn_start:
+      if self.step >= self.learn_start + self.per_step:
         if self.step % self.test_step == self.test_step - 1:
           avg_reward = total_reward / self.test_step
           avg_loss = self.total_loss / self.update_count
           avg_q = self.total_q / self.update_count
+          learning_rate = self.learning_rate_op.eval({self.learning_rate_step: self.step})
 
           try:
             max_ep_reward = np.max(ep_rewards)
@@ -80,8 +89,11 @@ class Agent(BaseModel):
           except:
             max_ep_reward, min_ep_reward, avg_ep_reward = 0, 0, 0
 
-          print '\navg_r: %.4f, avg_l: %.6f, avg_q: %3.6f, avg_ep_r: %.4f, max_ep_r: %.4f, min_ep_r: %.4f, # game: %d' \
-              % (avg_reward, avg_loss, avg_q, avg_ep_reward, max_ep_reward, min_ep_reward, num_game)
+          print '\navg_r: %.4f, avg_l: %.6f, avg_q: %3.6f, avg_ep_r: %.4f, max_ep_r: %.4f, min_ep_r: %.4f, # game: %d, learning_rate:%3.6f, ep:%3.6f' \
+                % (avg_reward, avg_loss, avg_q, avg_ep_reward, max_ep_reward, min_ep_reward, num_game, learning_rate,
+                   self.ep)
+          print "episode reward last %f. running mean: %f" % (
+            ep_reward_last, running_reward)
 
           if max_avg_ep_reward * 0.9 <= avg_ep_reward:
             self.step_assign_op.eval({self.step_input: self.step + 1})
@@ -113,11 +125,11 @@ class Agent(BaseModel):
           actions = []
 
   def predict(self, s_t, test_ep=None):
-    ep = test_ep or (self.ep_end +
+    self.ep = test_ep or (self.ep_end +
         max(0., (self.ep_start - self.ep_end)
           * (self.ep_end_t - max(0., self.step - self.learn_start)) / self.ep_end_t))
 
-    if random.random() < ep:
+    if random.random() < self.ep:
       action = random.randrange(self.env.action_size)
     else:
       action = self.q_action.eval({self.s_t: [s_t]})[0]
@@ -125,12 +137,12 @@ class Agent(BaseModel):
     return action
 
   def observe(self, screen, reward, action, terminal):
-    reward = max(self.min_reward, min(self.max_reward, reward))
+    # reward = max(self.min_reward, min(self.max_reward, reward))
 
     self.history.add(screen)
     self.memory.add(screen, reward, action, terminal)
 
-    if self.step > self.learn_start:
+    if self.step > self.learn_start + self.per_step:
       if self.step % self.train_frequency == 0:
         self.q_learning_mini_batch()
 
@@ -159,6 +171,7 @@ class Agent(BaseModel):
       terminal = np.array(terminal) + 0.
       max_q_t_plus_1 = np.max(q_t_plus_1, axis=1)
       target_q_t = (1. - terminal) * self.discount * max_q_t_plus_1 + reward
+      # print('terminal', terminal, max_q_t_plus_1, target_q_t, reward)
 
     _, q_t, loss, summary_str = self.sess.run([self.optim, self.q, self.loss, self.q_summary], {
       self.target_q_t: target_q_t,
@@ -182,22 +195,23 @@ class Agent(BaseModel):
 
     # training network
     with tf.variable_scope('prediction'):
-      if self.cnn_format == 'NHWC':
-        self.s_t = tf.placeholder('float32',
-            [None, self.screen_height, self.screen_width, self.history_length], name='s_t')
-      else:
-        self.s_t = tf.placeholder('float32',
-            [None, self.history_length, self.screen_height, self.screen_width], name='s_t')
+      self.s_t = tf.placeholder('float32', [None, self.history_length, self.ram_size], name = 's_t')
+      # if self.cnn_format == 'NHWC':
+      #   self.s_t = tf.placeholder('float32',
+      #       [None, self.screen_height, self.screen_width, self.history_length], name='s_t')
+      # else:
+      #   self.s_t = tf.placeholder('float32',
+      #       [None, self.history_length, self.screen_height, self.screen_width], name='s_t')
 
-      self.l1, self.w['l1_w'], self.w['l1_b'] = conv2d(self.s_t,
-          32, [8, 8], [4, 4], initializer, activation_fn, self.cnn_format, name='l1')
-      self.l2, self.w['l2_w'], self.w['l2_b'] = conv2d(self.l1,
-          64, [4, 4], [2, 2], initializer, activation_fn, self.cnn_format, name='l2')
-      self.l3, self.w['l3_w'], self.w['l3_b'] = conv2d(self.l2,
-          64, [3, 3], [1, 1], initializer, activation_fn, self.cnn_format, name='l3')
-
-      shape = self.l3.get_shape().as_list()
-      self.l3_flat = tf.reshape(self.l3, [-1, reduce(lambda x, y: x * y, shape[1:])])
+      # self.l1, self.w['l1_w'], self.w['l1_b'] = conv2d(self.s_t,
+      #     32, [8, 8], [4, 4], initializer, activation_fn, self.cnn_format, name='l1')
+      # self.l2, self.w['l2_w'], self.w['l2_b'] = conv2d(self.l1,
+      #     64, [4, 4], [2, 2], initializer, activation_fn, self.cnn_format, name='l2')
+      # self.l3, self.w['l3_w'], self.w['l3_b'] = conv2d(self.l2,
+      #     64, [3, 3], [1, 1], initializer, activation_fn, self.cnn_format, name='l3')
+      #
+      # shape = self.l3.get_shape().as_list()
+      # self.l3_flat = tf.reshape(self.l3, [-1, reduce(lambda x, y: x * y, shape[1:])])
 
       if self.dueling:
         self.value_hid, self.w['l4_val_w'], self.w['l4_val_b'] = \
@@ -216,8 +230,16 @@ class Agent(BaseModel):
         self.q = self.value + (self.advantage - 
           tf.reduce_mean(self.advantage, reduction_indices=1, keep_dims=True))
       else:
-        self.l4, self.w['l4_w'], self.w['l4_b'] = linear(self.l3_flat, 512, activation_fn=activation_fn, name='l4')
-        self.q, self.w['q_w'], self.w['q_b'] = linear(self.l4, self.env.action_size, name='q')
+        # self.l4, self.w['l4_w'], self.w['l4_b'] = linear(self.l3_flat, 512, activation_fn=activation_fn, name='l4')
+        self.s_t_1 = tf.reshape(self.s_t, [-1, self.ram_size*self.history_length])
+        # self.l4, self.w['l4_w'], self.w['l4_b'] = linear(self.s_t_1, 512, activation_fn=activation_fn, name='l4')
+        # self.l5, self.w['l5_w'], self.w['l5_b'] = linear(self.l4, 256, activation_fn=activation_fn, name='l5')
+        # # self.l6, self.w['l6_w'], self.w['l6_b'] = linear(self.l5, 128, activation_fn=activation_fn, name='l6')
+
+        self.l5, self.t_w['l5_w'], self.t_w['l5_b'] = \
+          linear(self.s_t_1, 512, activation_fn=activation_fn, name='target_l5')
+        self.l6 = self.l5
+        self.q, self.w['q_w'], self.w['q_b'] = linear(self.l6, self.env.action_size, name='q')
 
       self.q_action = tf.argmax(self.q, dimension=1)
 
@@ -229,22 +251,23 @@ class Agent(BaseModel):
 
     # target network
     with tf.variable_scope('target'):
-      if self.cnn_format == 'NHWC':
-        self.target_s_t = tf.placeholder('float32', 
-            [None, self.screen_height, self.screen_width, self.history_length], name='target_s_t')
-      else:
-        self.target_s_t = tf.placeholder('float32', 
-            [None, self.history_length, self.screen_height, self.screen_width], name='target_s_t')
-
-      self.target_l1, self.t_w['l1_w'], self.t_w['l1_b'] = conv2d(self.target_s_t, 
-          32, [8, 8], [4, 4], initializer, activation_fn, self.cnn_format, name='target_l1')
-      self.target_l2, self.t_w['l2_w'], self.t_w['l2_b'] = conv2d(self.target_l1,
-          64, [4, 4], [2, 2], initializer, activation_fn, self.cnn_format, name='target_l2')
-      self.target_l3, self.t_w['l3_w'], self.t_w['l3_b'] = conv2d(self.target_l2,
-          64, [3, 3], [1, 1], initializer, activation_fn, self.cnn_format, name='target_l3')
-
-      shape = self.target_l3.get_shape().as_list()
-      self.target_l3_flat = tf.reshape(self.target_l3, [-1, reduce(lambda x, y: x * y, shape[1:])])
+      self.target_s_t = tf.placeholder('float32', [None, self.history_length, self.ram_size], name='target_s_t')
+      # if self.cnn_format == 'NHWC':
+      #   self.target_s_t = tf.placeholder('float32',
+      #       [None, self.screen_height, self.screen_width, self.history_length], name='target_s_t')
+      # else:
+      #   self.target_s_t = tf.placeholder('float32',
+      #       [None, self.history_length, self.screen_height, self.screen_width], name='target_s_t')
+      #
+      # self.target_l1, self.t_w['l1_w'], self.t_w['l1_b'] = conv2d(self.target_s_t,
+      #     32, [8, 8], [4, 4], initializer, activation_fn, self.cnn_format, name='target_l1')
+      # self.target_l2, self.t_w['l2_w'], self.t_w['l2_b'] = conv2d(self.target_l1,
+      #     64, [4, 4], [2, 2], initializer, activation_fn, self.cnn_format, name='target_l2')
+      # self.target_l3, self.t_w['l3_w'], self.t_w['l3_b'] = conv2d(self.target_l2,
+      #     64, [3, 3], [1, 1], initializer, activation_fn, self.cnn_format, name='target_l3')
+      #
+      # shape = self.target_l3.get_shape().as_list()
+      # self.target_l3_flat = tf.reshape(self.target_l3, [-1, reduce(lambda x, y: x * y, shape[1:])])
 
       if self.dueling:
         self.t_value_hid, self.t_w['l4_val_w'], self.t_w['l4_val_b'] = \
@@ -263,10 +286,23 @@ class Agent(BaseModel):
         self.target_q = self.t_value + (self.t_advantage - 
           tf.reduce_mean(self.t_advantage, reduction_indices=1, keep_dims=True))
       else:
-        self.target_l4, self.t_w['l4_w'], self.t_w['l4_b'] = \
-            linear(self.target_l3_flat, 512, activation_fn=activation_fn, name='target_l4')
+        # self.target_l4, self.t_w['l4_w'], self.t_w['l4_b'] = \
+        #   linear(self.target_l3_flat, 512, activation_fn=activation_fn, name='target_l4')
+
+        self.target_s_t_1 = tf.reshape(self.target_s_t, [-1, self.ram_size*self.history_length])
+        # self.target_l4, self.t_w['l4_w'], self.t_w['l4_b'] = \
+        #     linear(self.target_s_t_1, 512, activation_fn=activation_fn, name='target_l4')
+        # self.target_l5, self.t_w['l5_w'], self.t_w['l5_b'] = \
+        #   linear(self.target_l4, 8, activation_fn=activation_fn, name='target_l5')
+        # # self.target_l6, self.t_w['l6_w'], self.t_w['l6_b'] = \
+        # #   linear(self.target_l5, 128, activation_fn=activation_fn, name='target_l6')
+
+        self.target_l5, self.t_w['l5_w'], self.t_w['l5_b'] = \
+          linear(self.target_s_t_1, 512, activation_fn=activation_fn, name='target_l5')
+        self.target_l6 = self.target_l5
+
         self.target_q, self.t_w['q_w'], self.t_w['q_b'] = \
-            linear(self.target_l4, self.env.action_size, name='target_q')
+            linear(self.target_l6, self.env.action_size, name='target_q')
 
       self.target_q_idx = tf.placeholder('int32', [None, None], 'outputs_idx')
       self.target_q_with_idx = tf.gather_nd(self.target_q, self.target_q_idx)

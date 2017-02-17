@@ -38,7 +38,10 @@ class BaseModel(object):
 
   def load_model(self):
     print(" [*] Loading checkpoints...")
-
+    # if tf.gfile.Exists(self.checkpoint_dir):
+    #   tf.gfile.DeleteRecursively(self.checkpoint_dir)
+    # if tf.gfile.Exists('./logs/%s' % self.model_dir):
+    #   tf.gfile.DeleteRecursively('./logs/%s' % self.model_dir)
     ckpt = tf.train.get_checkpoint_state(self.checkpoint_dir)
     if ckpt and ckpt.model_checkpoint_path:
       ckpt_name = os.path.basename(ckpt.model_checkpoint_path)
@@ -56,15 +59,16 @@ class BaseModel(object):
 
   @property
   def model_dir(self):
-    model_dir = self.config.env_name
-    for k, v in self._attrs.items():
-      if not k.startswith('_') and k not in ['display']:
-        model_dir += "/%s-%s" % (k, ",".join([str(i) for i in v])
-            if type(v) == list else v)
-    return model_dir + '/'
+    # model_dir = self.config.env_name
+    # for k, v in self._attrs.items():
+    #   if not k.startswith('_') and k not in ['display']:
+    #     model_dir += "/%s-%s" % (k, ",".join([str(i) for i in v])
+    #         if type(v) == list else v)
+    # return model_dir + '/'
+    return self.config.env_name + '/'
 
   @property
   def saver(self):
     if self._saver == None:
-      self._saver = tf.train.Saver(max_to_keep=10)
+      self._saver = tf.train.Saver(max_to_keep=5)
     return self._saver

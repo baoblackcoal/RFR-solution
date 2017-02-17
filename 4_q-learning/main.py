@@ -14,7 +14,7 @@ flags.DEFINE_boolean('double_q', False, 'Whether to use double q-learning')
 
 # Environment
 flags.DEFINE_string('env_name', 'Breakout-v0', 'The name of gym environment to use')
-flags.DEFINE_integer('action_repeat', 4, 'The number of action to be repeated')
+flags.DEFINE_integer('action_repeat', 1, 'The number of action to be repeated')
 
 # Etc
 flags.DEFINE_boolean('use_gpu', True, 'Whether to use gpu or not')

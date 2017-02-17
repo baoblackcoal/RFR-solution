@@ -20,8 +20,10 @@ class Agent(BaseModel):
     self.ep = 0
 
     self.env = environment
-    self.history = History(self.config)
-    self.memory = ReplayMemory(self.config, self.model_dir)
+    self.ob_shape_list = list(self.env.observation_shape)
+    self.history = History(self.config, self.ob_shape_list)
+    self.memory = ReplayMemory(self.config, self.model_dir, self.ob_shape_list)
+
 
     with tf.variable_scope('step'):
       self.step_op = tf.Variable(0, trainable=False, name='step')
@@ -195,7 +197,7 @@ class Agent(BaseModel):
 
     # training network
     with tf.variable_scope('prediction'):
-      self.s_t = tf.placeholder('float32', [None, self.history_length, self.ram_size], name = 's_t')
+      self.s_t = tf.placeholder('float32', [None, self.history_length] + self.ob_shape_list, name = 's_t')
       # if self.cnn_format == 'NHWC':
       #   self.s_t = tf.placeholder('float32',
       #       [None, self.screen_height, self.screen_width, self.history_length], name='s_t')
@@ -231,14 +233,14 @@ class Agent(BaseModel):
           tf.reduce_mean(self.advantage, reduction_indices=1, keep_dims=True))
       else:
         # self.l4, self.w['l4_w'], self.w['l4_b'] = linear(self.l3_flat, 512, activation_fn=activation_fn, name='l4')
-        self.s_t_1 = tf.reshape(self.s_t, [-1, self.ram_size*self.history_length])
-        # self.l4, self.w['l4_w'], self.w['l4_b'] = linear(self.s_t_1, 512, activation_fn=activation_fn, name='l4')
-        # self.l5, self.w['l5_w'], self.w['l5_b'] = linear(self.l4, 256, activation_fn=activation_fn, name='l5')
-        # # self.l6, self.w['l6_w'], self.w['l6_b'] = linear(self.l5, 128, activation_fn=activation_fn, name='l6')
+        self.s_t_1 = tf.reshape(self.s_t, [-1, self.history_length * np.sum(self.ob_shape_list)])
+        self.l4, self.w['l4_w'], self.w['l4_b'] = linear(self.s_t_1, 512, activation_fn=activation_fn, name='l4')
+        self.l5, self.w['l5_w'], self.w['l5_b'] = linear(self.l4, 256, activation_fn=activation_fn, name='l5')
+        self.l6, self.w['l6_w'], self.w['l6_b'] = linear(self.l5, 128, activation_fn=activation_fn, name='l6')
 
-        self.l5, self.t_w['l5_w'], self.t_w['l5_b'] = \
-          linear(self.s_t_1, 512, activation_fn=activation_fn, name='target_l5')
-        self.l6 = self.l5
+        # self.l5, self.t_w['l5_w'], self.t_w['l5_b'] = \
+        #   linear(self.s_t_1, 512, activation_fn=activation_fn, name='target_l5')
+        # self.l6 = self.l5
         self.q, self.w['q_w'], self.w['q_b'] = linear(self.l6, self.env.action_size, name='q')
 
       self.q_action = tf.argmax(self.q, dimension=1)
@@ -251,7 +253,7 @@ class Agent(BaseModel):
 
     # target network
     with tf.variable_scope('target'):
-      self.target_s_t = tf.placeholder('float32', [None, self.history_length, self.ram_size], name='target_s_t')
+      self.target_s_t = tf.placeholder('float32', [None, self.history_length] + self.ob_shape_list, name='target_s_t')
       # if self.cnn_format == 'NHWC':
       #   self.target_s_t = tf.placeholder('float32',
       #       [None, self.screen_height, self.screen_width, self.history_length], name='target_s_t')
@@ -289,18 +291,17 @@ class Agent(BaseModel):
         # self.target_l4, self.t_w['l4_w'], self.t_w['l4_b'] = \
         #   linear(self.target_l3_flat, 512, activation_fn=activation_fn, name='target_l4')
 
-        self.target_s_t_1 = tf.reshape(self.target_s_t, [-1, self.ram_size*self.history_length])
-        # self.target_l4, self.t_w['l4_w'], self.t_w['l4_b'] = \
-        #     linear(self.target_s_t_1, 512, activation_fn=activation_fn, name='target_l4')
-        # self.target_l5, self.t_w['l5_w'], self.t_w['l5_b'] = \
-        #   linear(self.target_l4, 8, activation_fn=activation_fn, name='target_l5')
-        # # self.target_l6, self.t_w['l6_w'], self.t_w['l6_b'] = \
-        # #   linear(self.target_l5, 128, activation_fn=activation_fn, name='target_l6')
-
+        self.target_s_t_1 = tf.reshape(self.target_s_t, [-1, self.history_length * np.sum(self.ob_shape_list)])
+        self.target_l4, self.t_w['l4_w'], self.t_w['l4_b'] = \
+            linear(self.target_s_t_1, 512, activation_fn=activation_fn, name='target_l4')
         self.target_l5, self.t_w['l5_w'], self.t_w['l5_b'] = \
-          linear(self.target_s_t_1, 512, activation_fn=activation_fn, name='target_l5')
-        self.target_l6 = self.target_l5
+          linear(self.target_l4, 256, activation_fn=activation_fn, name='target_l5')
+        self.target_l6, self.t_w['l6_w'], self.t_w['l6_b'] = \
+          linear(self.target_l5, 128, activation_fn=activation_fn, name='target_l6')
 
+        # self.target_l5, self.t_w['l5_w'], self.t_w['l5_b'] = \
+        #   linear(self.target_s_t_1, 512, activation_fn=activation_fn, name='target_l5')
+        # self.target_l6 = self.target_l5
         self.target_q, self.t_w['q_w'], self.t_w['q_b'] = \
             linear(self.target_l6, self.env.action_size, name='target_q')
 

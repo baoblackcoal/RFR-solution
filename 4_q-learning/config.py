@@ -32,9 +32,6 @@ class AgentConfig(object):
   double_q = False
   dueling = False
 
-  # ram_size = 128
-  ram_size = 4
-
   _test_step = 5 * scale
   # _save_step = _test_step * 10
   _save_step = _test_step * 100000

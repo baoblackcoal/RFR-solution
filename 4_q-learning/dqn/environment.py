@@ -51,6 +51,10 @@ class Environment(object):
     return self.env.action_space.n
 
   @property
+  def observation_shape(self):
+    return self.env.observation_space.shape
+
+  @property
   def lives(self):
     return self.env.ale.lives()
 

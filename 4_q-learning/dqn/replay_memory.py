@@ -8,7 +8,7 @@ import numpy as np
 from utils import save_npy, load_npy
 
 class ReplayMemory:
-  def __init__(self, config, model_dir):
+  def __init__(self, config, model_dir, ob_shape_list):
     self.model_dir = model_dir
 
     self.cnn_format = config.cnn_format
@@ -17,25 +17,26 @@ class ReplayMemory:
     self.rewards = np.empty(self.memory_size, dtype = np.integer)
     # print(self.memory_size, config.screen_height, config.screen_width)
     # self.screens = np.empty((self.memory_size, config.screen_height, config.screen_width), dtype = np.float16)
-    self.screens = np.empty((self.memory_size, config.ram_size), dtype = np.float16)
+    self.screens = np.empty([self.memory_size] + ob_shape_list, dtype = np.float16)
     self.terminals = np.empty(self.memory_size, dtype = np.bool)
     self.history_length = config.history_length
     # self.dims = (config.screen_height, config.screen_width)
-    self.dims = (config.ram_size)
+    self.dims = tuple(ob_shape_list)
     self.batch_size = config.batch_size
     self.count = 0
     self.current = 0
 
     # pre-allocate prestates and poststates for minibatch
-    # self.prestates = np.empty((self.batch_size, self.history_length) + self.dims, dtype = np.float16)
-    # self.poststates = np.empty((self.batch_size, self.history_length) + self.dims, dtype = np.float16)
-    self.prestates = np.empty((self.batch_size, self.history_length, self.dims), dtype = np.float16)
-    self.poststates = np.empty((self.batch_size, self.history_length, self.dims), dtype = np.float16)
+    self.prestates = np.empty((self.batch_size, self.history_length) + self.dims, dtype = np.float16)
+    self.poststates = np.empty((self.batch_size, self.history_length) + self.dims, dtype = np.float16)
+    # self.prestates = np.empty((self.batch_size, self.history_length, self.dims), dtype = np.float16)
+    # self.poststates = np.empty((self.batch_size, self.history_length, self.dims), dtype = np.float16)
 
   def add(self, screen, reward, action, terminal):
     # print('add----------------------------------------')
     # print(screen.shape, self.dims)
-    assert screen.shape[0] == self.dims
+    assert screen.shape == self.dims
+    # assert screen.shape[0] == self.dims
     # NB! screen is post-state, after action and reward
     self.actions[self.current] = action
     self.rewards[self.current] = reward

@@ -6,6 +6,7 @@ from utils import rgb2gray, imresize
 class Environment(object):
   def __init__(self, config):
     self.env = gym.make(config.env_name)
+    self.env_name = config.env_name
 
     screen_width, screen_height, self.action_repeat, self.random_start = \
         config.screen_width, config.screen_height, config.action_repeat, config.random_start
@@ -15,15 +16,12 @@ class Environment(object):
 
     self._screen = None
     self.reward = 0
-    # self.terminal = True
-    self.terminal = False
+    self.terminal = True
 
   def new_game(self, from_random_game=False):
-    # if self.lives == 0:
-    #   self._screen = self.env.reset()
-    self._screen = self.env.reset()
-
-    # self._step(0)
+    if self.lives == 0:
+      self._screen = self.env.reset()
+    self._step(0)
     self.render()
     return self.screen, 0, 0, self.terminal
 
@@ -56,7 +54,11 @@ class Environment(object):
 
   @property
   def lives(self):
-    return self.env.ale.lives()
+    if self.env_name == 'CartPole-v0':
+      return 0
+    else:
+      return self.env.ale.lives()
+
 
   @property
   def state(self):
@@ -72,21 +74,24 @@ class Environment(object):
 class GymEnvironment(Environment):
   def __init__(self, config):
     super(GymEnvironment, self).__init__(config)
+    self.env_name = config.env_name
 
   def act(self, action, is_training=True):
     cumulated_reward = 0
-    # start_lives = self.lives
+    start_lives = self.lives
+    # print('start_lives', start_lives)
 
     for _ in xrange(self.action_repeat):
       self._step(action)
       cumulated_reward = cumulated_reward + self.reward
 
-      # if is_training and start_lives > self.lives:
-      #   cumulated_reward -= 1
-      #   self.terminal = True
+      if is_training and start_lives > self.lives:
+        cumulated_reward -= 1
+        self.terminal = True
 
       if self.terminal:
-        # cumulated_reward = 0
+        if self.env_name == 'CartPole-v0':
+          cumulated_reward -= 1
         break
 
     self.reward = cumulated_reward

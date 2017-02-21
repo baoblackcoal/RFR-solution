@@ -33,10 +33,7 @@ class ReplayMemory:
     # self.poststates = np.empty((self.batch_size, self.history_length, self.dims), dtype = np.float16)
 
   def add(self, screen, reward, action, terminal):
-    # print('add----------------------------------------')
-    # print(screen.shape, self.dims)
     assert screen.shape == self.dims
-    # assert screen.shape[0] == self.dims
     # NB! screen is post-state, after action and reward
     self.actions[self.current] = action
     self.rewards[self.current] = reward

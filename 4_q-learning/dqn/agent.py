@@ -11,6 +11,7 @@ from .replay_memory import ReplayMemory
 from .ops import linear, conv2d, clipped_error
 from utils import get_time, save_pkl, load_pkl
 
+
 class Agent(BaseModel):
   def __init__(self, config, environment, sess):
     super(Agent, self).__init__(config)
@@ -23,7 +24,6 @@ class Agent(BaseModel):
     self.ob_shape_list = list(self.env.observation_shape)
     self.history = History(self.config, self.ob_shape_list)
     self.memory = ReplayMemory(self.config, self.model_dir, self.ob_shape_list)
-
 
     with tf.variable_scope('step'):
       self.step_op = tf.Variable(0, trainable=False, name='step')
@@ -41,7 +41,7 @@ class Agent(BaseModel):
 
     num_game, self.update_count, ep_reward = 0, 0, 0.
     total_reward, self.total_loss, self.total_q = 0., 0., 0.
-    max_avg_ep_reward = 0
+    max_avg_ep_reward = float("-inf ")
     ep_rewards, actions = [], []
 
     screen, reward, action, terminal = self.env.new_random_game()
@@ -90,32 +90,34 @@ class Agent(BaseModel):
             avg_ep_reward = np.mean(ep_rewards)
           except:
             max_ep_reward, min_ep_reward, avg_ep_reward = 0, 0, 0
-
-          print '\navg_r: %.4f, avg_l: %.6f, avg_q: %3.6f, avg_ep_r: %.4f, max_ep_r: %.4f, min_ep_r: %.4f, # game: %d, learning_rate:%3.6f, ep:%3.6f' \
+          print '\n' + time.strftime("%m-%d %H:%M", time.localtime()),
+          print ' avg_r: %.4f, avg_l: %.6f, avg_q: %3.6f, avg_ep_r: %.4f, max_ep_r: %.4f, min_ep_r: %.4f, # game: %d, learning_rate:%3.6f, ep:%3.6f' \
                 % (avg_reward, avg_loss, avg_q, avg_ep_reward, max_ep_reward, min_ep_reward, num_game, learning_rate,
                    self.ep)
-          print "episode reward last %f. running mean: %f" % (
+          print "last episode reward %f. running mean: %f" % (
             ep_reward_last, running_reward)
 
-          if max_avg_ep_reward * 0.9 <= avg_ep_reward:
+          # if max_avg_ep_reward * 0.9 <= avg_ep_reward:
+          if max_avg_ep_reward * 1.0 <= avg_ep_reward:
+            print '\n Save Checkpoint... max_avg_ep_reward: %3.6f avg_ep_reward: %3.6f' % (
+              max_avg_ep_reward, avg_ep_reward)
             self.step_assign_op.eval({self.step_input: self.step + 1})
             self.save_model(self.step + 1)
-
             max_avg_ep_reward = max(max_avg_ep_reward, avg_ep_reward)
 
           if self.step > 180:
             self.inject_summary({
-                'average.reward': avg_reward,
-                'average.loss': avg_loss,
-                'average.q': avg_q,
-                'episode.max reward': max_ep_reward,
-                'episode.min reward': min_ep_reward,
-                'episode.avg reward': avg_ep_reward,
-                'episode.num of game': num_game,
-                'episode.rewards': ep_rewards,
-                'episode.actions': actions,
-                'training.learning_rate': self.learning_rate_op.eval({self.learning_rate_step: self.step}),
-              }, self.step)
+              'average.reward': avg_reward,
+              'average.loss': avg_loss,
+              'average.q': avg_q,
+              'episode.max reward': max_ep_reward,
+              'episode.min reward': min_ep_reward,
+              'episode.avg reward': avg_ep_reward,
+              'episode.num of game': num_game,
+              'episode.rewards': ep_rewards,
+              'episode.actions': actions,
+              'training.learning_rate': self.learning_rate_op.eval({self.learning_rate_step: self.step}),
+            }, self.step)
 
           num_game = 0
           total_reward = 0.
@@ -128,9 +130,8 @@ class Agent(BaseModel):
 
   def predict(self, s_t, test_ep=None):
     self.ep = test_ep or (self.ep_end +
-        max(0., (self.ep_start - self.ep_end)
-          * (self.ep_end_t - max(0., self.step - self.learn_start)) / self.ep_end_t))
-
+                          max(0., (self.ep_start - self.ep_end)
+                              * (self.ep_end_t - max(0., self.step - self.learn_start)) / self.ep_end_t))
     if random.random() < self.ep:
       action = random.randrange(self.env.action_size)
     else:
@@ -191,13 +192,13 @@ class Agent(BaseModel):
     self.w = {}
     self.t_w = {}
 
-    #initializer = tf.contrib.layers.xavier_initializer()
+    # initializer = tf.contrib.layers.xavier_initializer()
     initializer = tf.truncated_normal_initializer(0, 0.02)
     activation_fn = tf.nn.relu
 
     # training network
     with tf.variable_scope('prediction'):
-      self.s_t = tf.placeholder('float32', [None, self.history_length] + self.ob_shape_list, name = 's_t')
+      self.s_t = tf.placeholder('float32', [None, self.history_length] + self.ob_shape_list, name='s_t')
       # if self.cnn_format == 'NHWC':
       #   self.s_t = tf.placeholder('float32',
       #       [None, self.screen_height, self.screen_width, self.history_length], name='s_t')
@@ -215,12 +216,13 @@ class Agent(BaseModel):
       # shape = self.l3.get_shape().as_list()
       # self.l3_flat = tf.reshape(self.l3, [-1, reduce(lambda x, y: x * y, shape[1:])])
 
+      size = self.history_length * np.sum(self.ob_shape_list)
       if self.dueling:
         self.value_hid, self.w['l4_val_w'], self.w['l4_val_b'] = \
-            linear(self.l3_flat, 512, activation_fn=activation_fn, name='value_hid')
+          linear(self.l3_flat, 512, activation_fn=activation_fn, name='value_hid')
 
         self.adv_hid, self.w['l4_adv_w'], self.w['l4_adv_b'] = \
-            linear(self.l3_flat, 512, activation_fn=activation_fn, name='adv_hid')
+          linear(self.l3_flat, 512, activation_fn=activation_fn, name='adv_hid')
 
         self.value, self.w['val_w_out'], self.w['val_w_b'] = \
           linear(self.value_hid, 1, name='value_out')
@@ -229,19 +231,19 @@ class Agent(BaseModel):
           linear(self.adv_hid, self.env.action_size, name='adv_out')
 
         # Average Dueling
-        self.q = self.value + (self.advantage - 
-          tf.reduce_mean(self.advantage, reduction_indices=1, keep_dims=True))
+        self.q = self.value + (self.advantage -
+                               tf.reduce_mean(self.advantage, reduction_indices=1, keep_dims=True))
       else:
         # self.l4, self.w['l4_w'], self.w['l4_b'] = linear(self.l3_flat, 512, activation_fn=activation_fn, name='l4')
-        self.s_t_1 = tf.reshape(self.s_t, [-1, self.history_length * np.sum(self.ob_shape_list)])
-        self.l4, self.w['l4_w'], self.w['l4_b'] = linear(self.s_t_1, 512, activation_fn=activation_fn, name='l4')
-        self.l5, self.w['l5_w'], self.w['l5_b'] = linear(self.l4, 256, activation_fn=activation_fn, name='l5')
-        self.l6, self.w['l6_w'], self.w['l6_b'] = linear(self.l5, 128, activation_fn=activation_fn, name='l6')
-
         # self.l5, self.t_w['l5_w'], self.t_w['l5_b'] = \
         #   linear(self.s_t_1, 512, activation_fn=activation_fn, name='target_l5')
         # self.l6 = self.l5
-        self.q, self.w['q_w'], self.w['q_b'] = linear(self.l6, self.env.action_size, name='q')
+        self.s_t_1 = tf.reshape(self.s_t, [-1, size])
+        self.l1, self.w['l1_w'], self.w['l1_b'] = linear(self.s_t_1, size, activation_fn=activation_fn, name='l1')
+        self.l2, self.w['l2_w'], self.w['l2_b'] = linear(self.l1, size, activation_fn=activation_fn, name='l2')
+        self.l3, self.w['l3_w'], self.w['l3_b'] = linear(self.l2, size, activation_fn=activation_fn, name='l3')
+        self.l4, self.w['l4_w'], self.w['l4_b'] = linear(self.l3, size, activation_fn=activation_fn, name='l4')
+        self.q, self.w['q_w'], self.w['q_b'] = linear(self.l4, self.env.action_size, name='q')
 
       self.q_action = tf.argmax(self.q, dimension=1)
 
@@ -273,10 +275,10 @@ class Agent(BaseModel):
 
       if self.dueling:
         self.t_value_hid, self.t_w['l4_val_w'], self.t_w['l4_val_b'] = \
-            linear(self.target_l3_flat, 512, activation_fn=activation_fn, name='target_value_hid')
+          linear(self.target_l3_flat, 512, activation_fn=activation_fn, name='target_value_hid')
 
         self.t_adv_hid, self.t_w['l4_adv_w'], self.t_w['l4_adv_b'] = \
-            linear(self.target_l3_flat, 512, activation_fn=activation_fn, name='target_adv_hid')
+          linear(self.target_l3_flat, 512, activation_fn=activation_fn, name='target_adv_hid')
 
         self.t_value, self.t_w['val_w_out'], self.t_w['val_w_b'] = \
           linear(self.t_value_hid, 1, name='target_value_out')
@@ -285,25 +287,24 @@ class Agent(BaseModel):
           linear(self.t_adv_hid, self.env.action_size, name='target_adv_out')
 
         # Average Dueling
-        self.target_q = self.t_value + (self.t_advantage - 
-          tf.reduce_mean(self.t_advantage, reduction_indices=1, keep_dims=True))
+        self.target_q = self.t_value + (self.t_advantage -
+                                        tf.reduce_mean(self.t_advantage, reduction_indices=1, keep_dims=True))
       else:
         # self.target_l4, self.t_w['l4_w'], self.t_w['l4_b'] = \
         #   linear(self.target_l3_flat, 512, activation_fn=activation_fn, name='target_l4')
-
-        self.target_s_t_1 = tf.reshape(self.target_s_t, [-1, self.history_length * np.sum(self.ob_shape_list)])
-        self.target_l4, self.t_w['l4_w'], self.t_w['l4_b'] = \
-            linear(self.target_s_t_1, 512, activation_fn=activation_fn, name='target_l4')
-        self.target_l5, self.t_w['l5_w'], self.t_w['l5_b'] = \
-          linear(self.target_l4, 256, activation_fn=activation_fn, name='target_l5')
-        self.target_l6, self.t_w['l6_w'], self.t_w['l6_b'] = \
-          linear(self.target_l5, 128, activation_fn=activation_fn, name='target_l6')
-
         # self.target_l5, self.t_w['l5_w'], self.t_w['l5_b'] = \
         #   linear(self.target_s_t_1, 512, activation_fn=activation_fn, name='target_l5')
-        # self.target_l6 = self.target_l5
+        self.target_s_t_1 = tf.reshape(self.target_s_t, [-1, size])
+        self.target_l1, self.t_w['l1_w'], self.t_w['l1_b'] = \
+          linear(self.target_s_t_1, size, activation_fn=activation_fn, name='target_l1')
+        self.target_l2, self.t_w['l2_w'], self.t_w['l2_b'] = \
+          linear(self.target_l1, size, activation_fn=activation_fn, name='target_l2')
+        self.target_l3, self.t_w['l3_w'], self.t_w['l3_b'] = \
+          linear(self.target_l2, size, activation_fn=activation_fn, name='target_l3')
+        self.target_l4, self.t_w['l4_w'], self.t_w['l4_b'] = \
+          linear(self.target_l3, size, activation_fn=activation_fn, name='target_l4')
         self.target_q, self.t_w['q_w'], self.t_w['q_b'] = \
-            linear(self.target_l6, self.env.action_size, name='target_q')
+          linear(self.target_l4, self.env.action_size, name='target_q')
 
       self.target_q_idx = tf.placeholder('int32', [None, None], 'outputs_idx')
       self.target_q_with_idx = tf.gather_nd(self.target_q, self.target_q_idx)
@@ -331,31 +332,33 @@ class Agent(BaseModel):
       self.loss = tf.reduce_mean(clipped_error(self.delta), name='loss')
       self.learning_rate_step = tf.placeholder('int64', None, name='learning_rate_step')
       self.learning_rate_op = tf.maximum(self.learning_rate_minimum,
-          tf.train.exponential_decay(
-              self.learning_rate,
-              self.learning_rate_step,
-              self.learning_rate_decay_step,
-              self.learning_rate_decay,
-              staircase=True))
+                                         tf.train.exponential_decay(
+                                           self.learning_rate,
+                                           self.learning_rate_step,
+                                           self.learning_rate_decay_step,
+                                           self.learning_rate_decay,
+                                           staircase=True))
       self.optim = tf.train.RMSPropOptimizer(
-          self.learning_rate_op, momentum=0.95, epsilon=0.01).minimize(self.loss)
+        self.learning_rate_op, momentum=0.95, epsilon=0.01).minimize(self.loss)
 
     with tf.variable_scope('summary'):
       scalar_summary_tags = ['average.reward', 'average.loss', 'average.q', \
-          'episode.max reward', 'episode.min reward', 'episode.avg reward', 'episode.num of game', 'training.learning_rate']
+                             'episode.max reward', 'episode.min reward', 'episode.avg reward', 'episode.num of game',
+                             'training.learning_rate']
 
       self.summary_placeholders = {}
       self.summary_ops = {}
 
       for tag in scalar_summary_tags:
         self.summary_placeholders[tag] = tf.placeholder('float32', None, name=tag.replace(' ', '_'))
-        self.summary_ops[tag]  = tf.summary.scalar("%s-%s/%s" % (self.env_name, self.env_type, tag), self.summary_placeholders[tag])
+        self.summary_ops[tag] = tf.summary.scalar("%s-%s/%s" % (self.env_name, self.env_type, tag),
+                                                  self.summary_placeholders[tag])
 
       histogram_summary_tags = ['episode.rewards', 'episode.actions']
 
       for tag in histogram_summary_tags:
         self.summary_placeholders[tag] = tf.placeholder('float32', None, name=tag.replace(' ', '_'))
-        self.summary_ops[tag]  = tf.summary.histogram(tag, self.summary_placeholders[tag])
+        self.summary_ops[tag] = tf.summary.histogram(tag, self.summary_placeholders[tag])
 
       self.writer = tf.summary.FileWriter('./logs/%s' % self.model_dir, self.sess.graph)
 
@@ -394,15 +397,15 @@ class Agent(BaseModel):
   def inject_summary(self, tag_dict, step):
     summary_str_lists = self.sess.run([self.summary_ops[tag] for tag in tag_dict.keys()], {
       self.summary_placeholders[tag]: value for tag, value in tag_dict.items()
-    })
+      })
     for summary_str in summary_str_lists:
       self.writer.add_summary(summary_str, self.step)
 
-  def play(self, n_step=10000, n_episode=100, test_ep=None, render=False):
+  def play(self, n_step=10000, n_episode=1000, test_ep=None, render=False):
     if test_ep == None:
       test_ep = self.ep_end
 
-    test_history = History(self.config)
+    test_history = History(self.config, self.ob_shape_list)
 
     if not self.display:
       gym_dir = '/tmp/%s-%s' % (self.env_name, get_time())
@@ -432,10 +435,10 @@ class Agent(BaseModel):
         best_reward = current_reward
         best_idx = idx
 
-      print "="*30
+      print "=" * 30
       print " [%d] Best reward : %d" % (best_idx, best_reward)
-      print "="*30
+      print "=" * 30
 
     if not self.display:
       self.env.env.monitor.close()
-      #gym.upload(gym_dir, writeup='https://github.com/devsisters/DQN-tensorflow', api_key='')
+      # gym.upload(gym_dir, writeup='https://github.com/devsisters/DQN-tensorflow', api_key='')

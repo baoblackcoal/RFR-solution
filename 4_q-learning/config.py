@@ -1,9 +1,8 @@
 class AgentConfig(object):
-  scale = 1000
-  # scale = 10000/4
+  scale = 10000
   display = False
 
-  max_step = 50000 * scale
+  max_step = 5000 * scale
   memory_size = 100 * scale
 
   batch_size = 32
@@ -11,20 +10,18 @@ class AgentConfig(object):
   cnn_format = 'NCHW'
   discount = 0.99
   target_q_update_step = 1 * scale
-  learning_rate = 0.0025
+  learning_rate = 0.00025
   learning_rate_minimum = 0.00025
   learning_rate_decay = 0.96
   learning_rate_decay_step = 5 * scale
 
-  ep_end = 0.01
+  ep_end = 0.1
   ep_start = 1.
   ep_end_t = memory_size
 
-  # history_length = 4
-  history_length = 1
+  history_length = 4
   train_frequency = 4
   learn_start = 5. * scale
-  # learn_start = 1. * scale
 
   min_delta = -1
   max_delta = 1
@@ -32,9 +29,8 @@ class AgentConfig(object):
   double_q = False
   dueling = False
 
-  _test_step = 5 * scale
-  # _save_step = _test_step * 10
-  _save_step = _test_step * 100000
+  _test_step = 1 * scale
+  _save_step = _test_step * 10
 
 class EnvironmentConfig(object):
   env_name = 'Breakout-v0'

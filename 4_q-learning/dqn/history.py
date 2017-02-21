@@ -9,7 +9,7 @@ class History:
 
     # self.history = np.zeros(
     #   [history_length, screen_height, screen_width], dtype=np.float32)
-    self.history = np.zeros([history_length] + list(ob_shape_list), dtype=np.float32)
+    self.history = np.zeros([history_length] + ob_shape_list, dtype=np.float32)
 
   def add(self, screen):
     self.history[:-1] = self.history[1:]

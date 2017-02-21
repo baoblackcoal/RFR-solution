@@ -29,12 +29,13 @@ class BaseModel(object):
       setattr(self, name, getattr(self.config, attr))
 
   def save_model(self, step=None):
-    print(" [*] Saving checkpoints...")
+    # print(" [*] Saving checkpoints...")
     model_name = type(self).__name__
 
     if not os.path.exists(self.checkpoint_dir):
       os.makedirs(self.checkpoint_dir)
-    self.saver.save(self.sess, self.checkpoint_dir, global_step=step)
+    self.saver.save(self.sess, os.path.join(
+      self.checkpoint_dir, self.config.env_name + '.ckpt'), global_step=step)
 
   def load_model(self):
     print(" [*] Loading checkpoints...")

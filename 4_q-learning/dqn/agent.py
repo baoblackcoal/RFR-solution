@@ -41,7 +41,8 @@ class Agent(BaseModel):
 
     num_game, self.update_count, ep_reward = 0, 0, 0.
     total_reward, self.total_loss, self.total_q = 0., 0., 0.
-    max_avg_ep_reward = float("-inf ")
+    max_running_reward = float("-inf ")
+    get_max_running_reward = False
     ep_rewards, actions = [], []
 
     screen, reward, action, terminal = self.env.new_random_game()
@@ -78,6 +79,16 @@ class Agent(BaseModel):
       total_reward += reward
 
       if self.step >= self.learn_start + self.per_step:
+        if max_running_reward * 1.05 <= running_reward:
+          print '\n\n Save Checkpoint... '
+          if get_max_running_reward and abs(max_running_reward) > 0.0000001:
+            print 'max_running_reward: %3.6f running_reward: %3.6f, improve: %3.6f%%' % (
+              max_running_reward, running_reward, (running_reward - max_running_reward) / max_running_reward * 100)
+          self.step_assign_op.eval({self.step_input: self.step + 1})
+          self.save_model(self.step + 1)
+          max_running_reward = running_reward
+          get_max_running_reward = True
+
         if self.step % self.test_step == self.test_step - 1:
           avg_reward = total_reward / self.test_step
           avg_loss = self.total_loss / self.update_count
@@ -96,14 +107,6 @@ class Agent(BaseModel):
                    self.ep)
           print "last episode reward %f. running mean: %f" % (
             ep_reward_last, running_reward)
-
-          # if max_avg_ep_reward * 0.9 <= avg_ep_reward:
-          if max_avg_ep_reward * 1.0 <= avg_ep_reward:
-            print '\n Save Checkpoint... max_avg_ep_reward: %3.6f avg_ep_reward: %3.6f' % (
-              max_avg_ep_reward, avg_ep_reward)
-            self.step_assign_op.eval({self.step_input: self.step + 1})
-            self.save_model(self.step + 1)
-            max_avg_ep_reward = max(max_avg_ep_reward, avg_ep_reward)
 
           if self.step > 180:
             self.inject_summary({

@@ -19,7 +19,7 @@ class Environment(object):
     self.terminal = True
 
   def new_game(self, from_random_game=False):
-    if self.lives == 0:
+    if self.lives == 0 or self.env_name == 'CartPole-v0':
       self._screen = self.env.reset()
     self._step(0)
     self.render()
@@ -29,7 +29,7 @@ class Environment(object):
     self.new_game(True)
     # for _ in xrange(random.randint(0, self.random_start - 1)):
     #   self._step(0)
-    # self.render()
+    self.render()
     return self.screen, 0, 0, self.terminal
 
   def _step(self, action):
@@ -84,17 +84,21 @@ class GymEnvironment(Environment):
     for _ in xrange(self.action_repeat):
       self._step(action)
       cumulated_reward = cumulated_reward + self.reward
+      # print('cumulated_reward',cumulated_reward )
 
       if is_training and start_lives > self.lives:
         cumulated_reward -= 1
+        # print('cumulated_reward -= 1')
         self.terminal = True
 
       if self.terminal:
         if self.env_name == 'CartPole-v0':
+          # print('reward', self.reward)
           cumulated_reward -= 1
         break
 
     self.reward = cumulated_reward
+    # print('after reward', self.reward)
 
     self.after_act(action)
     return self.state

@@ -15,10 +15,8 @@ class AgentConfig(object):
   learning_rate_decay = 0.96
   learning_rate_decay_step = 5 * scale
 
-  # ep_end = 0.1
-  # ep_start = 1.
-  ep_end = 0.05
-  ep_start = 0.05
+  ep_end = 0.1
+  ep_start = 1.
   ep_end_t = memory_size
 
   history_length = 4

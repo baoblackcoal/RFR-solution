@@ -41,7 +41,10 @@ class Environment(object):
 
   @ property
   def screen(self):
-    return self._screen
+    if self.env_name == 'CartPole-v0':
+      return self._screen
+    else:
+      return self._screen / 255.
     #return cv2.resize(cv2.cvtColor(self._screen, cv2.COLOR_BGR2YCR_CB)/255., self.dims)[:,:,0]
 
   @property

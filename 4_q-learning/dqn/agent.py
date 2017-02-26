@@ -38,6 +38,8 @@ class Agent(BaseModel):
     start_time = time.time()
 
     running_reward = None
+    save_step_threoshold = 0
+    save_terminal = False
 
     num_game, self.update_count, ep_reward = 0, 0, 0.
     total_reward, self.total_loss, self.total_q = 0., 0., 0.
@@ -64,6 +66,7 @@ class Agent(BaseModel):
       self.observe(screen, reward, action, terminal)
 
       if terminal:
+        save_terminal = True
         screen, reward, action, terminal = self.env.new_random_game()
 
         num_game += 1
@@ -79,15 +82,17 @@ class Agent(BaseModel):
       total_reward += reward
 
       if self.step >= self.learn_start + self.per_step:
-        if max_running_reward * 1.05 <= running_reward:
+        if save_terminal and max_running_reward * 0.95 <= running_reward and self.step > save_step_threoshold + self.test_step / 10:
           print '\n\n Save Checkpoint... '
           if get_max_running_reward and abs(max_running_reward) > 0.0000001:
-            print 'max_running_reward: %3.6f running_reward: %3.6f, improve: %3.6f%%' % (
+            print 'max_running_reward: %3.6f running_reward: %3.6f, improve: %3.3f%%' % (
               max_running_reward, running_reward, (running_reward - max_running_reward) / max_running_reward * 100)
           self.step_assign_op.eval({self.step_input: self.step + 1})
           self.save_model(self.step + 1)
-          max_running_reward = running_reward
+          max_running_reward = max(running_reward, max_running_reward)
           get_max_running_reward = True
+          save_step_threoshold = self.step
+          save_terminal = False
 
         if self.step % self.test_step == self.test_step - 1:
           avg_reward = total_reward / self.test_step
@@ -404,7 +409,7 @@ class Agent(BaseModel):
     for summary_str in summary_str_lists:
       self.writer.add_summary(summary_str, self.step)
 
-  def play(self, n_step=10000, n_episode=1000, test_ep=None, render=False):
+  def play(self, n_step=10000, n_episode=1000, test_ep=0.05, render=False):
     if test_ep == None:
       test_ep = self.ep_end
 

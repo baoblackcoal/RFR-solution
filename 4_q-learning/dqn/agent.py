@@ -226,6 +226,12 @@ class Agent(BaseModel):
 
       size = self.history_length * np.sum(self.ob_shape_list)
       if self.dueling:
+        self.s_t_1 = tf.reshape(self.s_t, [-1, size])
+        self.l1, self.w['l1_w'], self.w['l1_b'] = linear(self.s_t_1, size, activation_fn=activation_fn, name='l1')
+        self.l2, self.w['l2_w'], self.w['l2_b'] = linear(self.l1, size, activation_fn=activation_fn, name='l2')
+        self.l3, self.w['l3_w'], self.w['l3_b'] = linear(self.l2, size, activation_fn=activation_fn, name='l3')
+        self.l3_flat = self.l3
+
         self.value_hid, self.w['l4_val_w'], self.w['l4_val_b'] = \
           linear(self.l3_flat, 512, activation_fn=activation_fn, name='value_hid')
 
@@ -282,6 +288,15 @@ class Agent(BaseModel):
       # self.target_l3_flat = tf.reshape(self.target_l3, [-1, reduce(lambda x, y: x * y, shape[1:])])
 
       if self.dueling:
+        self.target_s_t_1 = tf.reshape(self.target_s_t, [-1, size])
+        self.target_l1, self.t_w['l1_w'], self.t_w['l1_b'] = \
+          linear(self.target_s_t_1, size, activation_fn=activation_fn, name='target_l1')
+        self.target_l2, self.t_w['l2_w'], self.t_w['l2_b'] = \
+          linear(self.target_l1, size, activation_fn=activation_fn, name='target_l2')
+        self.target_l3, self.t_w['l3_w'], self.t_w['l3_b'] = \
+          linear(self.target_l2, size, activation_fn=activation_fn, name='target_l3')
+        self.target_l3_flat = self.target_l3
+
         self.t_value_hid, self.t_w['l4_val_w'], self.t_w['l4_val_b'] = \
           linear(self.target_l3_flat, 512, activation_fn=activation_fn, name='target_value_hid')
 

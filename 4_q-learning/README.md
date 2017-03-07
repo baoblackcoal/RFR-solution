@@ -1,8 +1,7 @@
 # Human-Level Control through Deep Reinforcement Learning
 
-Tensorflow implementation of [Human-Level Control through Deep Reinforcement Learning](http://home.uchicago.edu/~arij/journalclub/papers/2015_Mnih_et_al.pdf).
+Tensorflow implementation of [Human-Level Control through Deep Reinforcement Learning](http://home.uchicago.edu/~arij/journalclub/papers/2015_Mnih_et_al.pdf), but the input data using the RAM state.
 
-![model](assets/model.png)
 
 This implementation contains:
 
@@ -15,7 +14,7 @@ This implementation contains:
 
 ## Requirements
 
-- Python 2.7 or Python 3.3+
+- Python 2.7
 - [gym](https://github.com/openai/gym)
 - [tqdm](https://github.com/tqdm/tqdm)
 - [SciPy](http://www.scipy.org/install.html) or [OpenCV2](http://opencv.org/)
@@ -30,13 +29,12 @@ First, install prerequisites with:
 
 To train a model for Breakout:
 
-    $ python main.py --env_name=Breakout-v0 --is_train=True
-    $ python main.py --env_name=Breakout-v0 --is_train=True --display=True
+    $ python main.py --use_gpu=False --display=False  --is_train=True --action_repeat=1 --env_name=Breakout-ram-v0
+
 
 To test and record the screen with gym:
 
-    $ python main.py --is_train=False
-    $ python main.py --is_train=False --display=True
+    $ python main.py --use_gpu=False --display=True --is_train=False --action_repeat=1 --env_name=Breakout-ram-v0
 
 
 ## Results
@@ -48,48 +46,18 @@ Result of training for 24 hours using GTX 980 ti.
 
 ## Simple Results
 
-Details of `Breakout` with model `m2`(red) for 30 hours using GTX 980 Ti.
+Details of `Breakout` with --action_repeat=1.
 
-![tensorboard](assets/0620_scalar_step_m2.png)
+![tensorboard](assets/tb_breakout_repeat_1.jpg)
 
-Details of `Breakout` with model `m3`(red) for 30 hours using GTX 980 Ti.
+Details of `Breakout` with --action_repeat=4.
 
-![tensorboard](assets/0620_scalar_step_m3.png)
-
-
-## Detailed Results
-
-**[1] Action-repeat (frame-skip) of 1, 2, and 4 without learning rate decay**
-
-![A1_A2_A4_0.00025lr](assets/A1_A2_A4_0.00025lr.png)
-
-**[2] Action-repeat (frame-skip) of 1, 2, and 4 with learning rate decay**
-
-![A1_A2_A4_0.0025lr](assets/A1_A2_A4_0.0025lr.png)
-
-**[1] & [2]**
-
-![A1_A2_A4_0.00025lr_0.0025lr](assets/A1_A2_A4_0.00025lr_0.0025lr.png)
-
-
-**[3] Action-repeat of 4 for DQN (dark blue) Dueling DQN (dark green) DDQN (brown) Dueling DDQN (turquoise)**
-
-The current hyper parameters and gradient clipping are not implemented as it is in the paper.
-
-![A4_duel_double](assets/A4_duel_double.png)
-
-
-**[4] Distributed action-repeat (frame-skip) of 1 without learning rate decay**
-
-![A1_0.00025lr_distributed](assets/A4_0.00025lr_distributed.png)
-
-**[5] Distributed action-repeat (frame-skip) of 4 without learning rate decay**
-
-![A4_0.00025lr_distributed](assets/A4_0.00025lr_distributed.png)
+![tensorboard](assets/tb_breakout_repeat_4.jpg)
 
 
 ## References
 
+- [DQN-tensorflow](https://github.com/devsisters/DQN-tensorflow)
 - [simple_dqn](https://github.com/tambetm/simple_dqn.git)
 - [Code for Human-level control through deep reinforcement learning](https://sites.google.com/a/deepmind.com/dqn/)
 

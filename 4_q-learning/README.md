@@ -37,13 +37,6 @@ To test and record the screen with gym:
     $ python main.py --use_gpu=False --display=True --is_train=False --action_repeat=1 --env_name=Breakout-ram-v0
 
 
-## Results
-
-Result of training for 24 hours using GTX 980 ti.
-
-![best](assets/best.gif)
-
-
 ## Simple Results
 
 Details of `Breakout` with --action_repeat=1.

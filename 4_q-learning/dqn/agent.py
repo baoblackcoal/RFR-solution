@@ -19,6 +19,7 @@ class Agent(BaseModel):
     self.weight_dir = 'weights'
 
     self.ep = 0
+    self.enable_update_target_q = False
 
     self.env = environment
     self.ob_shape_list = list(self.env.observation_shape)
@@ -93,6 +94,7 @@ class Agent(BaseModel):
           get_max_running_reward = True
           save_step_threoshold = self.step
           save_terminal = False
+          self.enable_update_target_q = True
 
         if self.step % self.test_step == self.test_step - 1:
           avg_reward = total_reward / self.test_step
@@ -157,7 +159,7 @@ class Agent(BaseModel):
       if self.step % self.train_frequency == 0:
         self.q_learning_mini_batch()
 
-      if self.step % self.target_q_update_step == self.target_q_update_step - 1:
+      if self.step % self.target_q_update_step == self.target_q_update_step - 1 and self.enable_update_target_q:
         self.update_target_q_network()
 
   def q_learning_mini_batch(self):

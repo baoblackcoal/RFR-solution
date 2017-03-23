@@ -83,7 +83,7 @@ class Agent(BaseModel):
       total_reward += reward
 
       if self.step >= self.learn_start + self.per_step:
-        if save_terminal and max_running_reward * 0.95 <= running_reward and self.step > save_step_threoshold + self.test_step / 10:
+        if save_terminal and max_running_reward * 0.97 <= running_reward and self.step > save_step_threoshold + self.test_step / 10:
           print '\n\n Save Checkpoint... '
           if get_max_running_reward and abs(max_running_reward) > 0.0000001:
             print 'max_running_reward: %3.6f running_reward: %3.6f, improve: %3.3f%%' % (
@@ -247,8 +247,9 @@ class Agent(BaseModel):
           linear(self.adv_hid, self.env.action_size, name='adv_out')
 
         # Average Dueling
-        self.q = self.value + (self.advantage -
-                               tf.reduce_mean(self.advantage, reduction_indices=1, keep_dims=True))
+        # self.q = self.value + (self.advantage -
+        #                        tf.reduce_mean(self.advantage, reduction_indices=1, keep_dims=True))
+        self.q = self.value + self.advantage
       else:
         # self.l4, self.w['l4_w'], self.w['l4_b'] = linear(self.l3_flat, 512, activation_fn=activation_fn, name='l4')
         # self.l5, self.t_w['l5_w'], self.t_w['l5_b'] = \
@@ -312,8 +313,9 @@ class Agent(BaseModel):
           linear(self.t_adv_hid, self.env.action_size, name='target_adv_out')
 
         # Average Dueling
-        self.target_q = self.t_value + (self.t_advantage -
-                                        tf.reduce_mean(self.t_advantage, reduction_indices=1, keep_dims=True))
+        # self.target_q = self.t_value + (self.t_advantage -
+        #                                 tf.reduce_mean(self.t_advantage, reduction_indices=1, keep_dims=True))
+        self.target_q = self.t_value + self.t_advantage
       else:
         # self.target_l4, self.t_w['l4_w'], self.t_w['l4_b'] = \
         #   linear(self.target_l3_flat, 512, activation_fn=activation_fn, name='target_l4')

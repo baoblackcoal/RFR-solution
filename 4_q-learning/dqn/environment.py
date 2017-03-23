@@ -95,9 +95,6 @@ class GymEnvironment(Environment):
         self.terminal = True
 
       if self.terminal:
-        if self.env_name == 'CartPole-v0':
-          # print('reward', self.reward)
-          cumulated_reward -= 1
         break
 
     self.reward = cumulated_reward
